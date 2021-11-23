@@ -1,0 +1,239 @@
+---
+title: "glpD-G3P, stochastic simulation"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+
+-----------------   nomenclature
+
+inactive promoter for glpD   inPD
+
+  active promoter for glpD   actPD
+
+inactive promoter for glpK   inPK
+
+  active promoter for glpK   actPK
+
+Gly                 Glycerol
+
+============ promoter 
+
+G3P + inPD → G3P + actPD        rp1= konD * G3P * inPD   (promoter activation) 
+
+G3P + inPK → G3P + actPK     rp2= konK * G3P * inPK   (promoter activation) 
+
+actPD → inPD                 rp3= koffD * actPD       (promoter deactivation) 
+
+actPK → inPK                 rp4= koffK * actPK       (promoter deactivation) 
+
+============ transcription
+
+actPD → actPD + mD        rc1= kactD * actPD               (transcription by active promoter) 
+
+actPK → actPK + mK        rc2= kactK * actPK               (transcription by active promoter) 
+
+inPD → inPD + mD         rc3= kinD * inPD                (transcription by inactive promoter) 
+
+inPK → inPK + mK         rc4= kinK * inPK                (transcription by inactive promoter) 
+
+============= translation 
+
+mD → D                rl1= ktrlD * mD               (translation of D)
+
+mK → K                rl2= ktrlK * mK               (translation of K)
+
+============ feedback 
+
+K + Gly → K + Gly + G3P        rf1= kpf * K * Gly (Gly is not consumed. Gly is a control parameter I will play with) 
+                                                        ONLY valid when Gly is plenty and the transportation through the membrane is fast.) 
+                                                      
+
+D + G3P  → D (+ DHAP)          rf2= knf * G3P * D     (negative feedback, I replace DHAP by a null )
+
+#### ignored ( DHAP → G3P  )
+
+============ degradation 
+
+mD → null              rd1= dmD * mD             (mRNA degradation)
+
+mK → null              rd2= dmK * mK
+
+D → null              rd3= dpD * D            (protein degradation)
+
+K → null              rd4= dpK * K
+
+G3P → null            rd5= dg * G3P
+
+============= 
+
+bacteria volume = pi*(0.8/2)^2*3.0 = 1.51 micrometer^3 (rod shape)
+number of gene copy  = 1, i.e. inPD + actPD = inPK + actPK = 1
+
+
+```{r }
+
+rm(list = ls())
+library(tidyverse)
+library(adaptivetau)
+library(tibble)
+library(ggplot2)
+
+source("~/Dropbox/ebola_cytokineNet/ML_RomyData/multiplot.R")
+
+```
+
+
+```{r, prepare the parameters }
+
+transitions = list(
+    # promoter
+    c(inPD = -1, actPD = +1), # promoter activation 
+    c(inPK = -1, actPK = +1), 
+    c(inPD = +1, actPD = -1), # promoter deactivation
+    c(inPK = +1, actPK = -1), 
+    # transcription
+    c(mD = +1),
+    c(mK = +1), # transcription by active promoter
+    c(mD = +1),
+    c(mK = +1), # transcription by inactive promoter
+    # translation 
+    c(D = +1), 
+    c(K = +1),
+    # feedback
+    c(G3P = +1), # positive feedback
+    c(G3P = -1), # negative feedback
+    # degradation 
+    c(mD = -1),
+    c(mK = -1),
+    c(D = -1),
+    c(K = -1),
+    c(G3P = -1)
+)
+
+rates <- function(x, params, t) {
+    # promoter
+    rp1 <- params$konD * x["G3P"] * x["inPD"]
+    rp2 <- params$konK * x["G3P"] * x["inPK"]
+    rp3 <- params$koffD* x["actPD"]
+    rp4 <- params$koffK* x["actPK"]
+    # transcription
+    rc1 <- params$kactD * x["actPD"]
+    rc2 <- params$kactK * x["actPK"]
+    rc3 <- params$kinD * x["inPD"]
+    rc4 <- params$kinK * x["inPK"]
+    # translation 
+    rl1 <- params$ktrlD * x["mD"]
+    rl2 <- params$ktrlK * x["mK"]
+    # feedback
+    rf1 <- params$kpf * x["K"] * params$Gly
+    rf2 <- params$knf * x["G3P"] * x["D"]
+    # degradation
+    rd1 <- params$dmD * x["mD"]
+    rd2 <- params$dmK * x["mK"]
+    rd3 <- params$dpD * x["D"]
+    rd4 <- params$dpK * x["K"]
+    rd5 <- params$dg * x["G3P"]
+    
+    return(c(rp1, rp2, rp3, rp4,
+             rc1, rc2, rc3, rc4,
+             rl1, rl2,
+             rf1, rf2,
+             rd1, rd2, rd3, rd4, rd5))
+
+}
+
+
+params <- list(
+    # promoter 
+    konD = 0.01,
+    konK = 0.01,
+    koffD = 0.1,
+    koffK = 0.1,
+    # transcription
+    kactD = 1,
+    kactK = 1,
+    kinD = 0.05,
+    kinK = 0.05,
+    # translation
+    ktrlD = 1,
+    ktrlK = 1,
+    # feedback
+    kpf = 0.01,
+    knf = 0.01,
+    # degradation
+    dmD = 0.069,    # mRNA half life 10 min, log(2)/10
+    dmK = 0.069,
+    dpD = 0.023,
+    dpK = 0.023,   # protein half life 30 min, log(2)/30
+    dg = 0.35,     # metabolite half life 2 min log(2)/2
+    ######################## 
+    Gly = 40      # control param
+)
+
+ini <- c(
+    inPD = 1,
+    inPK = 1,
+    actPD = 0,
+    actPK = 0,
+    mD = 10,
+    mK = 10,
+    D = 10,
+    K = 10,
+    G3P = 10
+    )
+
+```
+
+
+```{r, simulate}
+
+t.simu <- 1000
+t.plot <- 0
+
+# set.seed(12345)
+t.start <- Sys.time()
+rst.tau <- as_tibble(ssa.adaptivetau(ini, transitions, rates, params, tf = t.simu, tl.params = list(epsilon = 0.05)))
+t.tau <- Sys.time() - t.start
+
+# set.seed(12345)
+# t.start <- Sys.time()
+# rst.exact <- as_tibble(ssa.exact(ini, transitions, rates, params, tf = t.simu ))
+# t.exact <- Sys.time() - t.start
+
+itp.tau <- simecol::approxTime(rst.tau, seq(t.plot, t.simu, 1), method = 'constant', rule = 2)  # interpolation on defined time grids
+# itp.exact <- simecol::approxTime(rst.exact, seq(t.plot, t.simu, 1), method = 'constant', rule = 2)  # interpolation on defined time grids
+
+itp.tau <- as_tibble(itp.tau)
+# sm <- bind_cols( summarise(result, mean = mean(mD)),
+#                  summarise(result, sd = sd(mD)),
+#                  summarise(result, cv = mean(mD) / sd(mD)),
+#                  summarise(result, median = median(mD)),
+#                  summarise(result, mad = mad(mD)), 
+#                  Gly= params$Gly,
+#                  elpT= t.start - t.simu)
+
+
+```
+
+```{r, include=TRUE}
+p1 <- ggplot(itp.tau, mapping = aes(x= time, y= mD)) +
+    geom_line()
+p2 <- ggplot(itp.tau, mapping = aes(x= mD)) +
+    geom_histogram()
+
+p3 <- ggplot(itp.tau, mapping = aes(x= time, y= D)) +
+    geom_point()
+p4 <- ggplot(itp.tau, mapping = aes(x= time, y= G3P)) +
+    geom_point()
+
+
+mylayout <- matrix(seq(1,4), ncol = 2, byrow = FALSE)
+
+multiplot(p1, p2, p3, p4, layout = mylayout )
+
+```
+
