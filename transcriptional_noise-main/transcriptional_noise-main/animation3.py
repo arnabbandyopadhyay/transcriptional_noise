@@ -1,0 +1,17 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Nov 20 17:46:55 2021
+
+@author: Arnab
+"""
+
+from matplotlib import pyplot as plt
+from celluloid import Camera
+
+fig = plt.figure()
+camera = Camera(fig)
+for i in range(10):
+    plt.plot([i] * 10)
+    camera.snap()
+animation = camera.animate()
+animation.save('celluloid_minimal.gif', writer = 'imagemagick')

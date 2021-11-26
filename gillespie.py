@@ -55,19 +55,19 @@ class MichaelisMenten(Model):
             rate2 = Parameter(name="konK", expression=0.01)
             rate3 = Parameter(name="koffD", expression=0.1)
             rate4 = Parameter(name="koffK", expression=0.1)
-            rate5 = Parameter(name="kactD", expression=1)
-            rate6 = Parameter(name="kactK", expression=1)
+            rate5 = Parameter(name="kactD", expression=0.1)
+            rate6 = Parameter(name="kactK", expression=0.1)
             rate7 = Parameter(name="kinD", expression=0.05)
             rate8 = Parameter(name="kinK", expression=0.05)
-            rate9 = Parameter(name="ktrlD", expression=1)
-            rate10 = Parameter(name="ktrlK", expression=1)
+            rate9 = Parameter(name="ktrlD", expression=0.1)
+            rate10 = Parameter(name="ktrlK", expression=0.1)
             rate11 = Parameter(name="kpf", expression=0.01*Gly)
             rate12 = Parameter(name="knf", expression=0.01)
             rate13 = Parameter(name="dmD", expression=0.069)
             rate14 = Parameter(name="dmK", expression=0.069)
             rate15 = Parameter(name="dpD", expression=0.023)
             rate16 = Parameter(name="dpK", expression=0.023)
-            rate17 = Parameter(name="dg", expression=0.35)
+            rate17 = Parameter(name="dg", expression=1.0)
             
             
             # Add the Parameters to the Model.
@@ -91,9 +91,10 @@ class MichaelisMenten(Model):
             D = Species(name="D", initial_value=pd)
             K = Species(name="K", initial_value=pk)
             G3P = Species(name="G3P", initial_value=pg3p)
+            G3PX = Species(name="G3PX", initial_value=0)
             
             # Add the Species to the Model.
-            self.add_species([inPD, inPK, actPD, actPK, mD, mK, D, K, G3P])
+            self.add_species([inPD, inPK, actPD, actPK, mD, mK, D, K, G3P, G3PX])
             
             """
             Reactions are the reaction channels which cause the system to change over time.
@@ -220,7 +221,7 @@ class MichaelisMenten(Model):
             r17 = Reaction(
                     name="r17",
                     reactants={G3P: 1}, 
-                    products={},
+                    products={G3PX: 1},
                     rate=rate17
                 )
             
@@ -230,21 +231,21 @@ class MichaelisMenten(Model):
                                r13, r14, r15, r16, r17])
             
             # Use NumPy to set the timespan of the Model.
-            self.timespan(np.linspace(0, 1, 11))
+            self.timespan(np.linspace(0, 1, 5))
             
             
-class AddValue:
+# class AddValue:
 
-    def av(self):
-        model = MichaelisMenten(1,2,3,4,5,6,7,8,9)
-        results = model.run(solver=TauLeapingSolver)
-        return results
+#     def av(self):
+#         model = MichaelisMenten(1,2,3,4,5,6,7,8,9)
+#         results = model.run(solver=TauLeapingSolver)
+#         return results
         
 
-b=AddValue()
-kk=b.av()
+# b=AddValue()
+# kk=b.av()
 
-kk.plot()
+# kk.plot()
             
             
 # Instantiate your Model.
@@ -311,4 +312,4 @@ For now though, lets run it with default settings.
 """
 
 # results.plot()
-plt.savefig('foo.pdf')
+# plt.savefig('foo.pdf')
