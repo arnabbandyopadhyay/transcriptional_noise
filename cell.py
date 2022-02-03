@@ -33,17 +33,18 @@ from gillespy2.solvers.cpp import (
 
 
 
-mu, sigma = 120, 3 
+# mu, sigma = 120, 3 
+sigma=10
 
 class Cell:
     tnow=0
     
-    def __init__(self, birthtime, **kwargs):
+    def __init__(self, birthtime, mu, **kwargs):
         
         
         
         self.birthtime=birthtime
-        
+        self.mu=mu
          
         self.nextdiv=self.birthtime+np.random.normal(mu, sigma)#np.random.normal(mu, sigma)
         
@@ -59,29 +60,41 @@ class Cell:
         if 'pactpk' in kwargs: self.pactpk = kwargs['pactpk']
         else: self.pactpk = 0
         
-        
-        if 'pmd' in kwargs: self.pmd = kwargs['pmd']
-        else: self.pmd = np.random.randint(5,15)
-        
-        if 'pmk' in kwargs: self.pmk = kwargs['pmk']
-        else: self.pmk = np.random.randint(5,15)
-        
-        if 'pd' in kwargs: self.pd = kwargs['pd']
-        else: self.pd = np.random.randint(5,15)
-        
-        if 'pk' in kwargs: self.pk = kwargs['pk']
-        else: self.pk = np.random.randint(5,15)
+        if 'ppr' in kwargs: self.ppr = kwargs['ppr']
+        else: self.ppr = 1
         
         if 'pg3p' in kwargs: self.pg3p = kwargs['pg3p']
-        else: self.pg3p = np.random.randint(5,15)
+        else: self.pg3p = np.random.randint(0,5)
+        
+        if 'pmd' in kwargs: self.pmd = kwargs['pmd']
+        else: self.pmd = np.random.randint(0,5)
+        
+        if 'pmk' in kwargs: self.pmk = kwargs['pmk']
+        else: self.pmk = np.random.randint(0,5)
+        
+        if 'pmr' in kwargs: self.pmr = kwargs['pmr']
+        else: self.pmr = np.random.randint(0,5)
+        
+        if 'pd' in kwargs: self.pd = kwargs['pd']
+        else: self.pd = np.random.randint(0,5)
+        
+        if 'pk' in kwargs: self.pk = kwargs['pk']
+        else: self.pk = np.random.randint(0,5)
+        
+        if 'pr' in kwargs: self.pr = kwargs['pr']
+        else: self.pr = np.random.randint(0,5)
+        
+        if 'pgly' in kwargs: self.pgly = kwargs['pgly']
+        else: self.pgly = np.random.randint(0,5)
+        
         
         # self.generation = 0
         
         if 'xpos' in kwargs: self.xpos = kwargs['xpos']
-        else: self.xpos = round(np.random.random(),2)*box_width
+        else: self.xpos = np.random.randint(box_width) #round(np.random.random(),2)*box_width
         
         if 'ypos' in kwargs: self.ypos = kwargs['ypos']
-        else: self.ypos =round(np.random.random(),2)*box_width
+        else: self.ypos =np.random.randint(box_width) #round(np.random.random(),2)*box_width
         
         if 'xvel' in kwargs: self.xvel = kwargs['xvel']
         else: self.xvel = 2*(np.random.random()-0.5)/2
@@ -94,10 +107,10 @@ class Cell:
             
         
     @classmethod  
-    def clone(cls, b,md,mk,d,k,g3p):
-        return cls(birthtime=b.tnow, nextdiv=b.tnow+np.random.normal(mu, sigma),
-                   pinpd = 1, pinpk = 1, pactpd = 0, pactpk = 0,
-                   pmd=md,pmk=mk,pd=d,pk=k,pg3p=g3p,
+    def clone(cls, b,g3p,md,mk,mr,d,k,r,gly):
+        return cls(birthtime=b.tnow, mu=b.mu, nextdiv=b.tnow+np.random.normal(b.mu, sigma),
+                   pinpd = 1, pinpk = 1, pactpd = 0, pactpk = 0, ppr=1,
+                   pg3p=g3p, pmd=md,pmk=mk,pmr=mr,pd=d,pk=k,pr=r, pgly=gly,
                    xpos = b.xpos,
                    ypos = b.ypos,
                    xvel=2*(np.random.random()-0.5)/2,
@@ -107,37 +120,49 @@ class Cell:
 
     def proliferate(self):
 
+        g3p=self.pg3p
         md=self.pmd
         mk=self.pmk
+        mr=self.pmr
         d=self.pd
         k=self.pk
-        g3p=self.pg3p
+        r=self.pr
+        gly=self.pgly
         
+        g3p1=int(np.random.random()*g3p)
         md1=int(np.random.random()*md)
         mk1=int(np.random.random()*mk)
+        mr1=int(np.random.random()*mr)
         d1=int(np.random.random()*d)
         k1=int(np.random.random()*k)
-        g3p1=int(np.random.random()*g3p)
+        r1=int(np.random.random()*r)
+        gly1=int(np.random.random()*gly)
         
-        nl=[Cell.clone(self, md1, mk1, d1, k1, g3p1),
-            Cell.clone(self, md-md1,mk-mk1,d-d1,k-k1, g3p-g3p1)]
+        
+        nl=[Cell.clone(self,g3p1,md1, mk1, mr1, d1, k1, r1, gly1),
+            Cell.clone(self,g3p-g3p1,md-md1,mk-mk1,mr-mr1,d-d1,k-k1,r-r1, gly-gly1)]
 
         return nl
     
     def ssa(self):
         model = gp.MichaelisMenten(self.pinpd,self.pinpk,self.pactpd,
-                                   self.pactpk,self.pmd, self.pmk, 
-                                   self.pd, self.pk, self.pg3p)
+                                   self.pactpk,self.ppr, self.pg3p,self.pmd, self.pmk, self.pmr,
+                                   self.pd, self.pk, self.pr, self.pgly)
         results = model.run(TauLeapingSolver)
-        self.pinpd=results['inPD'][-1]
-        self.pinpk=results['inPK'][-1]
+        self.pinpd=results['inPD_R'][-1]
+        self.pinpk=results['inPK_R'][-1]
         self.pactpd=results['actPD'][-1]
         self.pactpk=results['actPK'][-1]
+        self.ppr=results['PR'][-1]
+        self.pg3p=results['G3P'][-1]
         self.pmd=results['mD'][-1]
         self.pmk=results['mK'][-1]
+        self.pmr=results['mR'][-1]
         self.pd=results['D'][-1]
         self.pk=results['K'][-1]
-        self.pg3p=results['G3P'][-1]
+        self.pr=results['R'][-1]
+        self.pgly=results['Gly'][-1]
+        
         
         # print([results['inPD'][0],results['inPK'][0],
         #        results['actPD'][0],results['actPK'][0],
@@ -145,7 +170,7 @@ class Cell:
         #        results['D'][0],results['K'][0],
         #        results['G3P'][0],results['G3PX'][0]])
         
-        return results['G3PX'][-1]
+        # return results['G3PX'][-1]
         
 
 x_vel, y_vel= 0.5, 0.5
@@ -167,6 +192,24 @@ def take_step(b):
       b[1] += b[4]*dt
     
     return b
+
+def update(list1,list2):
+    for i in range(len(list1)):
+        if list1[i] == "RIGHT":
+            if list2[i,0]<box_width:
+                list2[i,0]+=1
+        elif list1[i] == "LEFT":
+            if list2[i,0]>0:
+                list2[i,0]-=1
+        elif list1[i] == "UP":
+            if list2[i,1]<box_width:
+                list2[i,1]+=1
+        elif list1[i] == "DOWN":
+            if list2[i,1] > 0:
+                list2[i,1]-=1
+    return list2
+                
+    
 
 
 # def uptake(a,b):
