@@ -16,11 +16,12 @@ import gillespie as gp
 from gillespy2.solvers.cpp import SSACSolver
 import scipy.spatial as spatial
 from scipy.stats import kde
-import cell 
+#import cell
+import cell2 
 import csv
 from multiprocessing import Pool, Process, freeze_support
 
-
+import time
 # def uptake(a,b):
     
 #     for i in range(len(b)):
@@ -49,9 +50,9 @@ def main_fn(core):
     n_particles = 100
     box_width = 500
     # n_steps = 10#500#700
-    dt = 0
+    dt = 1
     tnow=0
-    max_cells=3000
+    max_cells=10000
     radius=10
     
     # def uptake(a,b):
@@ -68,7 +69,7 @@ def main_fn(core):
     # g3p_xy=[[0,0]]
     # g3px_xy=np.array([[0,0,0,0.1,0.1]])
     
-    bb=[cell.Cell(0, mu) for i in range(50)]
+    bb=[cell2.Cell(0, mu) for i in range(50)]
     
     gly_xy=np.random.randint(box_width,size=[100000,2])
     g3p_xy=np.random.randint(box_width,size=[10,2])
@@ -86,7 +87,7 @@ def main_fn(core):
         tree=spatial.KDTree(gly_xy)
         tree_g3p=spatial.KDTree(g3p_xy)
         
-        cell.Cell.tnow=tnow
+        cell2.Cell.tnow=tnow
         
         bb=[b.proliferate() if tnow > b.nextdiv else [b] for b in bb]
         
@@ -100,6 +101,7 @@ def main_fn(core):
         counter=-1
         for i in bb:
             counter+=1
+            i.volume=i.volume*np.exp(np.log(2)*dt/int(i.nextdiv-i.birthtime))
             # if len(clpt_gly[counter])>0:
             #     length=len(clpt_gly[counter])
             #     if length>=2:
@@ -112,43 +114,58 @@ def main_fn(core):
             #         gly_xy=np.delete(gly_xy,clpt_gly[counter][:1],axis=0)
             #         tree=spatial.KDTree(gly_xy)
             #         clpt_gly=tree.query_ball_point(bb_xy,5)
+            
+            if tnow%2==0:
      
-############ uptake of glycerol from nearby               
-            if len(clpt_gly[counter])>0:
-                length=len(clpt_gly[counter])
-                # print('length')
-                # print(length)
-                if length>=5:
-                    i.pgly+=5
-                    gly_xy=np.delete(gly_xy,clpt_gly[counter][:5],axis=0)
-                    tree=spatial.KDTree(gly_xy)
-                    clpt_gly=tree.query_ball_point(bb_xy,radius)
-                else:
-                    i.pgly+=length
-                    gly_xy=np.delete(gly_xy,clpt_gly[counter][:length],axis=0)
-                    tree=spatial.KDTree(gly_xy)
-                    clpt_gly=tree.query_ball_point(bb_xy,radius)
+    ############ uptake of glycerol from nearby               
+                if len(clpt_gly[counter])>0:
+                    length=int(0.05*len(clpt_gly[counter])*i.pk)
+                    # print('length')
+                    # print(length)
+                    
+                    if length>=0:
+                        i.pgly+=length
+                        gly_xy=np.delete(gly_xy,clpt_gly[counter][:length],axis=0)
+                        tree=spatial.KDTree(gly_xy)
+                        clpt_gly=tree.query_ball_point(bb_xy,radius)
                     
                     
-############## Osmotic uptake and release of g3p
-            g3pn=cell.osmotic(i.pg3p, len(clpt_g3p[counter]), radius)
-            if g3pn>i.pg3p:
-                # print('uptake')
-                in_out_diff=int(g3pn-i.pg3p)
-                g3p_xy=np.delete(g3p_xy,clpt_g3p[counter][:in_out_diff],axis=0)
-                tree_g3p=spatial.KDTree(g3p_xy)
-                clpt_g3p=tree_g3p.query_ball_point(bb_xy,radius)
-                i.pg3p=g3pn
-            else:
-                in_out_diff=int(i.pg3p-g3pn)
-                # print('release')
-                # print(in_out_diff)
-                if in_out_diff>0:
-                    g3p_cor=[[i.xpos,i.ypos] for b in range(in_out_diff)]
-                    g3p_xy=np.append(g3p_xy,g3p_cor,axis=0)
+                    # if length>=5:
+                    #     i.pgly+=5
+                    #     gly_xy=np.delete(gly_xy,clpt_gly[counter][:5],axis=0)
+                    #     tree=spatial.KDTree(gly_xy)
+                    #     clpt_gly=tree.query_ball_point(bb_xy,radius)
+                    # else:
+                    #     i.pgly+=length
+                    #     gly_xy=np.delete(gly_xy,clpt_gly[counter][:length],axis=0)
+                    #     tree=spatial.KDTree(gly_xy)
+                    #     clpt_gly=tree.query_ball_point(bb_xy,radius)
+                        
+                        
+    ############## Osmotic uptake and release of g3p
+                g3pn=cell2.osmotic(i.pg3p,i.volume, len(clpt_g3p[counter]), radius)
+                if g3pn>i.pg3p:
+                    # print('uptake')
+                    in_out_diff=int(g3pn-i.pg3p)
+                    g3p_xy=np.delete(g3p_xy,clpt_g3p[counter][:in_out_diff],axis=0)
                     tree_g3p=spatial.KDTree(g3p_xy)
                     clpt_g3p=tree_g3p.query_ball_point(bb_xy,radius)
                     i.pg3p=g3pn
+                else:
+                    in_out_diff=int(i.pg3p-g3pn)
+                    # print('release')
+                    # print(in_out_diff)
+                    if in_out_diff>0:
+                        g3p_cor=[[i.xpos,i.ypos] for b in range(in_out_diff)]
+                        g3p_xy=np.append(g3p_xy,g3p_cor,axis=0)
+                        tree_g3p=spatial.KDTree(g3p_xy)
+                        clpt_g3p=tree_g3p.query_ball_point(bb_xy,radius)
+                        i.pg3p=g3pn
+                        
+                
+                
+                kk=i.ssa()
+            
                     
 # ############## uptake of g3p from nearby
 
@@ -177,8 +194,8 @@ def main_fn(core):
             
 #             # print(g3p_xy)
             
-            if tnow%1==0:
-                kk=i.ssa()
+            # if tnow%1==0:
+            #     kk=i.ssa()
             
             
                 # g3px_xy=np.append(g3px_xy, [[i.xpos,i.ypos, kk,
@@ -236,16 +253,24 @@ def main_fn(core):
                     
                     
 ################# Random walk update g3p
-    
+
+        # start = time.time()
+        
+        
+        directions = [1,-1,10,-10]
         step=random.choices(directions,k=len(g3p_xy))
             
-        g3p_xy=cell.update(step,g3p_xy)
+        # g3p_xy=cell2.update(step,g3p_xy,'G3P')
+        
+        g3p_xy=list(map(cell2.update_g3p,step,g3p_xy))
         
         step=random.choices(directions,k=len(gly_xy))
             
-        gly_xy=cell.update(step,gly_xy)
+        # gly_xy=cell2.update(step,gly_xy,'Gly')
         
+        gly_xy=list(map(cell2.update_gly,step,gly_xy))
         
+        # print(time.time()-start)
 
 
 
@@ -358,7 +383,7 @@ def main_fn(core):
 
 if __name__ == '__main__':
     with Pool(10) as p:
-        print(p.map(main_fn, range(1,21)))
+        print(p.map(main_fn, range(1,11)))
 
 
 

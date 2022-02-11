@@ -34,7 +34,7 @@ from gillespy2.solvers.cpp import (
 
 
 # mu, sigma = 120, 3 
-sigma=10
+sigma=20
 
 class Cell:
     tnow=0
@@ -45,8 +45,8 @@ class Cell:
         
         self.birthtime=birthtime
         self.mu=mu
-         
-        self.nextdiv=self.birthtime+np.random.normal(mu, sigma)#np.random.normal(mu, sigma)
+        self.volume=1 
+        self.nextdiv=self.birthtime+np.random.randint(mu-sigma, mu+sigma)#np.random.normal(mu, sigma)
         
         if 'pinpd' in kwargs: self.pinpd = kwargs['pinpd']
         else: self.pinpd = 1
@@ -108,7 +108,7 @@ class Cell:
         
     @classmethod  
     def clone(cls, b,g3p,md,mk,mr,d,k,r,gly):
-        return cls(birthtime=b.tnow, mu=b.mu, nextdiv=b.tnow+np.random.normal(b.mu, sigma),
+        return cls(birthtime=b.tnow, mu=b.mu, volume=1, nextdiv=b.tnow+np.random.randint(b.mu-sigma,b.mu+sigma),
                    pinpd = 1, pinpk = 1, pactpd = 0, pactpk = 0, ppr=1,
                    pg3p=g3p, pmd=md,pmk=mk,pmr=mr,pd=d,pk=k,pr=r, pgly=gly,
                    xpos = b.xpos,
@@ -208,16 +208,31 @@ def update(list1,list2):
             if list2[i,1] > 0:
                 list2[i,1]-=5
     return list2
+
+def update2(list1,list2):
+    if list1 == "RIGHT":
+        if list2[0]<box_width:
+            list2[0]+=5
+    elif list1 == "LEFT":
+        if list2[0]>0:
+            list2[0]-=5
+    elif list1 == "UP":
+        if list2[1]<box_width:
+            list2[1]+=5
+    elif list1 == "DOWN":
+        if list2[1] > 0:
+            list2[1]-=5
+    return list2
                 
-def osmotic(inside,outside,radius):
+def osmotic(inside,cell_volume,outside,radius):
     """ 
     osmotic pressure= i*c*R*T; i, R & T is constant for inside and outside
     cell volume=2.4 um2
     
     """
-    ci=inside/2.4
+    ci=inside/(2.4*cell_volume)
     co=outside/(np.pi*radius*radius)
-    ch=(inside+outside)/(2.4+np.pi*radius*radius)
+    ch=(inside+outside)/(2.4*cell_volume+np.pi*radius*radius)
     
     return round(ch*2.4)
     
