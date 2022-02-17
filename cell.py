@@ -16,6 +16,7 @@ import gillespie as gp
 from gillespy2.solvers.cpp import SSACSolver
 import scipy.spatial as spatial
 from scipy.stats import kde
+from numba import jit
 
 from gillespy2.solvers.numpy import (
  	NumPySSASolver,
@@ -176,7 +177,6 @@ class Cell:
 x_vel, y_vel= 0.5, 0.5
 
 
-
 def take_step(b):
     
     xvel=b[3]  
@@ -193,37 +193,92 @@ def take_step(b):
     
     return b
 
-def update(list1,list2):
-    for i in range(len(list1)):
-        if list1[i] == "RIGHT":
-            if list2[i,0]<box_width:
-                list2[i,0]+=5
-        elif list1[i] == "LEFT":
-            if list2[i,0]>0:
-                list2[i,0]-=5
-        elif list1[i] == "UP":
-            if list2[i,1]<box_width:
-                list2[i,1]+=5
-        elif list1[i] == "DOWN":
-            if list2[i,1] > 0:
-                list2[i,1]-=5
-    return list2
+# def update(list1,list2,molecule):
+#     if molecule=='Gly':
+#         stepsize=5
+#     elif molecule=='G3P':
+#         stepsize=2
+        
+#     for i in range(len(list1)):
+#         if list1[i] == "RIGHT":
+#             if list2[i,0]<box_width:
+#                 list2[i,0]+=stepsize
+#         elif list1[i] == "LEFT":
+#             if list2[i,0]>0:
+#                 list2[i,0]-=stepsize
+#         elif list1[i] == "UP":
+#             if list2[i,1]<box_width:
+#                 list2[i,1]+=stepsize
+#         elif list1[i] == "DOWN":
+#             if list2[i,1] > 0:
+#                 list2[i,1]-=stepsize
+#     return list2
 
-def update2(list1,list2):
-    if list1 == "RIGHT":
+@jit(nopython=True)
+def update_gly(list1,list2):
+    if list1 == 1:
         if list2[0]<box_width:
             list2[0]+=5
-    elif list1 == "LEFT":
+    elif list1 == -1:
         if list2[0]>0:
             list2[0]-=5
-    elif list1 == "UP":
+    elif list1 == 10:
         if list2[1]<box_width:
             list2[1]+=5
-    elif list1 == "DOWN":
+    elif list1 == -10:
         if list2[1] > 0:
             list2[1]-=5
     return list2
-                
+
+@jit(nopython=True)
+def update_g3p(list1,list2):
+    if list1 == 1:
+        if list2[0]<box_width:
+            list2[0]+=2
+    elif list1 == -1:
+        if list2[0]>0:
+            list2[0]-=2
+    elif list1 == 10:
+        if list2[1]<box_width:
+            list2[1]+=2
+    elif list1 == -10:
+        if list2[1] > 0:
+            list2[1]-=2
+    return list2
+
+
+# def update2_gly(list1,list2):
+#     if list1 == "RIGHT":
+#         if list2[0]<box_width:
+#             list2[0]+=5
+#     elif list1 == "LEFT":
+#         if list2[0]>0:
+#             list2[0]-=5
+#     elif list1 == "UP":
+#         if list2[1]<box_width:
+#             list2[1]+=5
+#     elif list1 == "DOWN":
+#         if list2[1] > 0:
+#             list2[1]-=5
+#     return list2
+
+# def update2_g3p(list1,list2):
+#     if list1 == "RIGHT":
+#         if list2[0]<box_width:
+#             list2[0]+=2
+#     elif list1 == "LEFT":
+#         if list2[0]>0:
+#             list2[0]-=2
+#     elif list1 == "UP":
+#         if list2[1]<box_width:
+#             list2[1]+=2
+#     elif list1 == "DOWN":
+#         if list2[1] > 0:
+#             list2[1]-=2
+#     return list2
+
+
+@jit(nopython=True)                
 def osmotic(inside,cell_volume,outside,radius):
     """ 
     osmotic pressure= i*c*R*T; i, R & T is constant for inside and outside
@@ -234,7 +289,9 @@ def osmotic(inside,cell_volume,outside,radius):
     co=outside/(np.pi*radius*radius)
     ch=(inside+outside)/(2.4*cell_volume+np.pi*radius*radius)
     
-    return round(ch*2.4)
+    return round(ch*2.4*cell_volume)
+    
+
     
 
 
