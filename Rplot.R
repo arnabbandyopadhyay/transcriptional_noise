@@ -7,7 +7,7 @@ library(ggplot2)
 #https://www.r-graph-gallery.com/294-basic-ridgeline-plot.html
 
 filenames <- list.files(path='low_copy/',pattern="histogram_pd_*", full.names=TRUE)
-#filenames <- list.files(pattern="histogram_pd_*", full.names=TRUE)
+filenames <- list.files(pattern="histogram_pd_*", full.names=TRUE)
 
 nd<-data.frame(name=NULL, val=NULL)
 nd2<-NULL
@@ -51,3 +51,40 @@ ld<-data.frame(dat=c(lc_dat$sd,hc_dat$sd),col=rep(c('low','high'),c(30,30)))
 # basic example
 ggplot(ld, aes(x = dat, color=col)) +
   geom_density()
+
+
+
+
+filenames <- list.files(path='low_copy/',pattern="histogram_pd_*", full.names=TRUE)
+nd<-data.frame(name=NULL, val=NULL)
+cv<-NULL
+for (i in 1:10){
+  print(i)
+  filenames <- list.files(pattern=paste0("core_",i,'_*'), full.names=TRUE)
+  nd2<-NULL
+  for (j in 1:length(filenames)){
+    dd<-read.csv(filenames[j],sep=',', header = FALSE)
+    nd2<-rbind(nd2,dd)
+  }
+  
+  qd<-data.frame(name=rep(i,length(nd2$V2)), val=nd2$V2)
+  nd<-rbind(nd,qd)
+  cv=rbind(cv,c(qd[1,1],mean(qd$val),sd(qd$val),mean(qd$val)/sd(qd$val)))
+}
+cv<-data.frame(cv)
+colnames(cv)<-c('Name', 'mean', 'sd', 'cv')
+
+# basic example
+ggplot(nd, aes(x = val, y = name, group=name, fill=name)) +
+  geom_density_ridges() +
+  theme_ridges()+ 
+  theme(legend.position = "none")
+
+
+
+
+
+
+
+
+
