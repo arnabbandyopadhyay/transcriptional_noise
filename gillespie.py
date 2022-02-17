@@ -314,7 +314,7 @@ class Gillespie(Model):
             - expression: Some constant value.
             """
             rate1 = Parameter(name="kbR", expression=0.1)
-            rate2 = Parameter(name="kuR", expression=0.1)
+            rate2 = Parameter(name="kuR", expression=0.01)
             rate3 = Parameter(name="koffD", expression=0.1)
             rate4 = Parameter(name="konD", expression=0.1)
             rate5 = Parameter(name="koffK", expression=0.1)
@@ -328,7 +328,7 @@ class Gillespie(Model):
             rate13 = Parameter(name="ktrsl1", expression=0.2)
             rate14 = Parameter(name="ktrsl2", expression=0.2)
             rate15 = Parameter(name="ktrsp_g3p", expression=0)
-            rate16 = Parameter(name="ktrsp_gly", expression=1)
+            rate16 = Parameter(name="ktrsp_gly", expression=0)
             rate17 = Parameter(name="kpf", expression=0.005)
             rate18 = Parameter(name="knf", expression=0.005)
             rate19 = Parameter(name="dmD", expression=0.069)
@@ -565,20 +565,22 @@ class Gillespie(Model):
                                r19, r20, r21, r22, r23, r24, r25, r26])
             
             # Use NumPy to set the timespan of the Model.
-            self.timespan(np.linspace(0, 1, 10))
+            self.timespan(np.linspace(0, 2, 20))
             
 
 
 
 
-
+# import time
+# start=time.time()
 # for i in range(1000):
 #     print(i)
 #     model = Gillespie(1,1,0,0,0,5,5,5,5,5,5,5,5,5,1)
 #     results = model.run(solver=NumPySSASolver)
 #     # results.plot(title='testC.png',included_species_list=['G3P'],save_png=True)
     
-# model = Gillespie(1,1,0,0,0,5,5,5,5,5,5,5,5,5,1)
+# print(time.time()-start)
+# # model = Gillespie(1,1,0,0,0,5,5,5,5,5,5,5,5,5,1)
 # results = model.run(solver=TauLeapingSolver)
 
 
