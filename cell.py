@@ -17,7 +17,7 @@ from gillespy2.solvers.cpp import SSACSolver
 import scipy.spatial as spatial
 from scipy.stats import kde
 from numba import jit
-
+import params
 from gillespy2.solvers.numpy import (
  	NumPySSASolver,
  	ODESolver,
@@ -35,7 +35,9 @@ from gillespy2.solvers.cpp import (
 
 
 # mu, sigma = 120, 3 
-sigma=20
+sigma=params.sigma
+box_width = params.box_width
+
 
 class Cell:
     tnow=0
@@ -309,10 +311,6 @@ def osmotic(inside,cell_volume,outside,radius):
 # # fig = plt.figure()
 # # camera = Camera(fig)
 
-n_particles = 100
-box_width = 500
-n_steps = 500
-dt = 1
 
 
 # nd=[]

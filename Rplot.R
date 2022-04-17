@@ -6,16 +6,16 @@ library(ggplot2)
 #head(diamonds)
 #https://www.r-graph-gallery.com/294-basic-ridgeline-plot.html
 
-filenames <- list.files(path='low_copy/',pattern="histogram_pd_*", full.names=TRUE)
-filenames <- list.files(pattern="histogram_pd_*", full.names=TRUE)
+filenames <- list.files(pattern="^histogram_pd_*", full.names=TRUE)
+filenames <- list.files(path="low_copy/random_partition_2min_highspeed/", pattern="^histogram_pd_*", full.names=TRUE)
 
 nd<-data.frame(name=NULL, val=NULL)
 nd2<-NULL
 for (i in 1:length(filenames)){
   print(i)
   dd<-read.csv(filenames[i],sep=',', header = FALSE)
-  print(length(dd$V1))
-  dd=unlist(dd$V1, use.names=FALSE)
+  print(length(dd$V2))
+  dd=unlist(dd$V2, use.names=FALSE)
   #print(c(mean(dd),sd(dd)))
   nd2<-rbind(nd2,c(mean(dd),sd(dd),sd(dd)/mean(dd)))
   qd<-data.frame(name=rep(i,length(dd)), val=dd)
@@ -58,18 +58,19 @@ ggplot(ld, aes(x = dat, color=col)) +
 filenames <- list.files(path='low_copy/',pattern="histogram_pd_*", full.names=TRUE)
 nd<-data.frame(name=NULL, val=NULL)
 cv<-NULL
-for (i in 1:10){
+for (i in c(1:30)){
   print(i)
-  filenames <- list.files(pattern=paste0("core_",i,'_*'), full.names=TRUE)
+  filenames <- list.files(path='low_copy/random_partition/',pattern=paste0("tnow_core_",i,'_histogram_300.0_*'), full.names=TRUE)
   nd2<-NULL
   for (j in 1:length(filenames)){
     dd<-read.csv(filenames[j],sep=',', header = FALSE)
     nd2<-rbind(nd2,dd)
   }
   
-  qd<-data.frame(name=rep(i,length(nd2$V2)), val=nd2$V2)
+  qd<-data.frame(name=rep(i,length(nd2$V4)), val=nd2$V4)
+  print(length(qd$val))
   nd<-rbind(nd,qd)
-  cv=rbind(cv,c(qd[1,1],mean(qd$val),sd(qd$val),mean(qd$val)/sd(qd$val)))
+  cv=rbind(cv,c(qd[1,1],mean(qd$val),sd(qd$val),sd(qd$val)/mean(qd$val)))
 }
 cv<-data.frame(cv)
 colnames(cv)<-c('Name', 'mean', 'sd', 'cv')
@@ -79,8 +80,11 @@ ggplot(nd, aes(x = val, y = name, group=name, fill=name)) +
   geom_density_ridges() +
   theme_ridges()+ 
   theme(legend.position = "none")
+p1<-p1+xlim(c(0,60))
+p2<-p2+xlim(c(0,60))
 
-
+library(ggpubr)
+ggarrange(p1,p2, ncol = 2, nrow = 1)
 
 
 

@@ -21,8 +21,9 @@ import cell2
 import csv
 from multiprocessing import Pool, Process, freeze_support
 from sklearn.neighbors import NearestNeighbors
-
+import params
 import time
+
 # def uptake(a,b):
     
 #     for i in range(len(b)):
@@ -34,13 +35,11 @@ import time
 
 
 
-random.seed(5)
-mus=[random.randrange(45,120) for rn in range(100)]
-sigma = 20
 
-random.seed()
-fig = plt.figure()
-camera = Camera(fig)
+
+# random.seed()
+# fig = plt.figure()
+# camera = Camera(fig)
 
 
 
@@ -48,15 +47,17 @@ def main_fn(core):
     np.random.seed(random.randint(1,100000))
     
 	
-    mu=mus[core]
-    n_particles = 100
-    box_width = 500
-    # n_steps = 10#500#700
-    dt = 1
-    tnow=0
-    max_cells=20000
-    radius=5
+    mu=params.mus[core]
+    sigma=params.sigma
+    method=params.method
     
+    box_width = params.box_width
+    # n_steps = 10#500#700
+    dt = params.dt
+    tnow=0
+    max_cells=params.max_cells
+    radius=params.radius
+    lmt=np.random.choice(params.max_lim)
     # def uptake(a,b):
     
     #     for i in range(len(b)):
@@ -71,11 +72,11 @@ def main_fn(core):
     # g3p_xy=[[0,0]]
     # g3px_xy=np.array([[0,0,0,0.1,0.1]])
     
-    bb=[cell2.Cell(0, mu) for i in range(50)]
+    bb=[cell2.Cell(0, mu, lmt) for i in range(100)]
     
     
-    gly_xy=np.random.randint(box_width,size=[100000,2])
-    g3p_xy=np.random.randint(box_width,size=[10,2])
+    gly_xy=np.random.randint(box_width,size=[300000,2])
+    g3p_xy=np.random.randint(box_width,size=[300000,2])
     # plt.plot(gly_xy[:,0],gly_xy[:,1],'r.',markersize=1)
     # plt.savefig('gly_initial.png')
     
@@ -84,16 +85,16 @@ def main_fn(core):
     while len(bb)<max_cells:
         
         # print(len(gly_xy))
-        tnow=tnow+1
-        print([tnow,len(bb),len(g3p_xy),len(gly_xy)])
+        tnow=round(tnow+dt,1)
+        if round(tnow,1)%1==0:
+            print([tnow,len(bb),len(g3p_xy),len(gly_xy)])
         
         # tree=spatial.KDTree(gly_xy)
         # tree_g3p=spatial.KDTree(g3p_xy)
         
-        neigh_gly = NearestNeighbors(radius=radius)
-        neigh_g3p = NearestNeighbors(radius=radius)
-        neigh_gly.fit(gly_xy)
-        neigh_g3p.fit(g3p_xy)
+        
+        
+        
         
         
         cell2.Cell.tnow=tnow
@@ -104,17 +105,40 @@ def main_fn(core):
         
         bb_xy=[[b.xpos,b.ypos] for b in bb]
         
+        
+        
+        if len(gly_xy)>0:
+            neigh_gly = NearestNeighbors(radius=radius)
+            neigh_gly.fit(gly_xy)
+            clpt_gly=np.asarray(neigh_gly.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
+            
+        if len(g3p_xy)>0:
+            neigh_g3p = NearestNeighbors(radius=radius)
+            neigh_g3p.fit(g3p_xy)
+            clpt_g3p=np.asarray(neigh_g3p.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
+        
+        
         # clpt_gly=neigh_gly.kneighbors(bb_xy,return_distance=False)
-        clpt_gly=np.asarray(neigh_gly.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
-        clpt_g3p=np.asarray(neigh_g3p.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
+        # clpt_gly=np.asarray(neigh_gly.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
+        # clpt_g3p=np.asarray(neigh_g3p.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
         # clpt_g3p=neigh_g3p.kneighbors(bb_xy, return_distance=False)
         # clpt_gly=tree.query_ball_point(bb_xy,radius)
         # clpt_g3p=tree_g3p.query_ball_point(bb_xy,radius)
+        
+        
+        
+        # if round(tnow,1)%5==0:
+        #     if method=='deterministic':
+        #            [i.deterministic_ode() for i in bb]
+        
+        
     
         counter=-1
         for i in bb:
             counter+=1
-            i.volume=i.volume*np.exp(np.log(2)*dt/int(i.nextdiv-i.birthtime))
+            i.volume=i.volume+dt*(np.log(2)/int(i.nextdiv-i.birthtime))*np.exp(np.log(2)*(tnow-i.birthtime-1)/int(i.nextdiv-i.birthtime))
+            # if round(tnow,1)%1==0:
+            #     print([i.volume,i.nextdiv])
             # if len(clpt_gly[counter])>0:
             #     length=len(clpt_gly[counter])
             #     if length>=2:
@@ -128,7 +152,7 @@ def main_fn(core):
             #         tree=spatial.KDTree(gly_xy)
             #         clpt_gly=tree.query_ball_point(bb_xy,5)
             
-            if tnow%2==0:
+            if round(tnow,1)%2==0:
                 
     # ######################### osmotic uptake glycerol
     #             glyn=cell2.osmotic(i.pgly,i.volume, len(clpt_gly[counter]), radius)
@@ -148,28 +172,57 @@ def main_fn(core):
     #                 i.pgly=glyn
                             
      
-    ############ uptake of glycerol from nearby   
+    ########### uptake of glycerol from nearby   
+                if params.gly_uptake==1:
                             
-                if len(clpt_gly[counter])>0:
-                    if i.pk>0:
-                        
-                        length=int(0.2*len(clpt_gly[counter])*np.random.normal(i.pk,0.1))
-                        if length>len(clpt_gly[counter]):
-                            length=len(clpt_gly[counter])
+                    if len(clpt_gly[counter])>0:
+                        if i.pk>0:
                             
-                        # print('length')
-                        # print(length)
-                        
-                        if length>=0:
-                            i.pgly+=length
-                            gly_xy=np.delete(gly_xy,clpt_gly[counter][:length],axis=0)
-                            neigh_gly = NearestNeighbors(radius=radius)
-                            neigh_gly.fit(gly_xy)
-                            clpt_gly=np.asarray(neigh_gly.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
-                            # clpt_gly=neigh_gly.kneighbors(bb_xy, return_distance=False)
-                            # tree=spatial.KDTree(gly_xy)
-                            # clpt_gly=tree.query_ball_point(bb_xy,radius)
-                    
+                            length=int(1*len(clpt_gly[counter])*np.random.normal(i.pk,0.1))
+                            
+                            if length>len(clpt_gly[counter]):
+                                length=len(clpt_gly[counter])
+                                
+                                
+                            # print('length')
+                            # print(length)
+                            
+                            if length>=0:
+                                i.pgly+=length
+                                gly_xy=np.delete(gly_xy,clpt_gly[counter][:length],axis=0)
+                                
+                                if len(gly_xy)>0:
+                                    neigh_gly = NearestNeighbors(radius=radius)
+                                    neigh_gly.fit(gly_xy)
+                                    clpt_gly=np.asarray(neigh_gly.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
+                                    
+                                
+                                
+    
+                                # clpt_gly=neigh_gly.kneighbors(bb_xy, return_distance=False)
+                                # tree=spatial.KDTree(gly_xy)
+                                # clpt_gly=tree.query_ball_point(bb_xy,radius)
+                            
+                         
+    ########### uptake of g3p from nearby  // no osmotic
+                if params.g3p_uptake==1:
+                    if len(clpt_g3p[counter])>0:
+                        if i.pk>0:
+                            length_g3p=int(1*len(clpt_g3p[counter])*np.random.normal(i.pk,0.1))
+                            if length_g3p>len(clpt_g3p[counter]):
+                                length_g3p=len(clpt_g3p[counter])
+                                
+                            if length_g3p>=0:
+                                i.pg3p+=length_g3p
+                                g3p_xy=np.delete(g3p_xy,clpt_g3p[counter][:length_g3p],axis=0)
+                                
+                                if len(g3p_xy)>0:
+                                    neigh_g3p = NearestNeighbors(radius=radius)
+                                    neigh_g3p.fit(g3p_xy)
+                                    clpt_g3p=np.asarray(neigh_g3p.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
+        
+                                
+                                
                     
                     # if length>=5:
                     #     i.pgly+=5
@@ -183,44 +236,61 @@ def main_fn(core):
                     #     clpt_gly=tree.query_ball_point(bb_xy,radius)
                         
                         
-    ############## Osmotic uptake and release of g3p
-                g3pn=cell2.osmotic(i.pg3p,i.volume, len(clpt_g3p[counter]), radius)
-                if g3pn>i.pg3p:
-                    # print('uptake')
-                    in_out_diff=int(g3pn-i.pg3p)
-                    g3p_xy=np.delete(g3p_xy,clpt_g3p[counter][:in_out_diff],axis=0)
-                    neigh_g3p = NearestNeighbors(radius=radius)
-                    neigh_g3p.fit(g3p_xy)
-                    clpt_g3p=np.asarray(neigh_g3p.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
-                    # clpt_g3p=neigh_g3p.kneighbors(bb_xy, return_distance=False)
-                    # tree_g3p=spatial.KDTree(g3p_xy)
-                    # clpt_g3p=tree_g3p.query_ball_point(bb_xy,radius)
-                    i.pg3p=g3pn
-                else:
-                    in_out_diff=int(i.pg3p-g3pn)
-                    # print('release')
-                    # print(in_out_diff)
-                    if in_out_diff>0:
-                        g3p_cor=[[i.xpos,i.ypos] for b in range(in_out_diff)]
-                        g3p_xy=np.append(g3p_xy,g3p_cor,axis=0)
-                        neigh_g3p = NearestNeighbors(radius=radius)
-                        neigh_g3p.fit(g3p_xy)
-                        clpt_g3p=np.asarray(neigh_g3p.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
-                        # clpt_g3p=neigh_g3p.kneighbors(bb_xy, return_distance=False)
-                        # tree_g3p=spatial.KDTree(g3p_xy)
-                        # clpt_g3p=tree_g3p.query_ball_point(bb_xy,radius)
-                        i.pg3p=g3pn
+    # ############## Osmotic uptake and release of g3p
+    #             g3pn=cell2.osmotic(i.pg3p,i.volume, len(clpt_g3p[counter]), radius)
+    #             if g3pn>i.pg3p:
+    #                 # print('uptake')
+    #                 in_out_diff=int(g3pn-i.pg3p)
+    #                 g3p_xy=np.delete(g3p_xy,clpt_g3p[counter][:in_out_diff],axis=0)
+    #                 neigh_g3p = NearestNeighbors(radius=radius)
+    #                 neigh_g3p.fit(g3p_xy)
+    #                 clpt_g3p=np.asarray(neigh_g3p.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
+    #                 # clpt_g3p=neigh_g3p.kneighbors(bb_xy, return_distance=False)
+    #                 # tree_g3p=spatial.KDTree(g3p_xy)
+    #                 # clpt_g3p=tree_g3p.query_ball_point(bb_xy,radius)
+    #                 i.pg3p=g3pn
+                # else:
+                #     in_out_diff=int(i.pg3p-g3pn)
+                #     # print('release')
+                #     # print(in_out_diff)
+                #     if in_out_diff>0:
+                #         g3p_cor=[[i.xpos,i.ypos] for b in range(in_out_diff)]
+                #         g3p_xy=np.append(g3p_xy,g3p_cor,axis=0)
+                #         neigh_g3p = NearestNeighbors(radius=radius)
+                #         neigh_g3p.fit(g3p_xy)
+                #         clpt_g3p=np.asarray(neigh_g3p.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
+                #         # clpt_g3p=neigh_g3p.kneighbors(bb_xy, return_distance=False)
+                #         # tree_g3p=spatial.KDTree(g3p_xy)
+                #         # clpt_g3p=tree_g3p.query_ball_point(bb_xy,radius)
+                #         i.pg3p=g3pn
                         
                 
+                if method=='stochastic':
+                    kk=i.ssa()
+                if method=='deterministic':
+                    kk=i.deterministic_ode()
                 
-                kk=i.ssa()
-                
-                if len(bb)>max_cells-200:
+                if len(bb)>max_cells-500:
             
                     fln='core_%s' % core
                     filename1 = fln + "_histogram_pd_%s.csv" % tnow
                     
-                    dat1=[[b.pd,b.pmd,b.pg3p] for b in bb]
+                    dat1=[[b.pmd,b.pmk,b.pmr,b.pd,b.pk,b.pr,b.pg3p,b.pg3pr,b.pgly] for b in bb]
+                    f1 = open(filename1, 'w')
+            
+                    writer1 = csv.writer(f1)
+            
+                    writer1.writerows(dat1)
+        
+                    f1.close()
+                    
+                    
+                if round(tnow,1)%50==0:
+        
+                    fln='tnow_core_%s' % core
+                    filename1 = fln + "_histogram_%s.csv" % tnow
+                    
+                    dat1=[[b.pmd,b.pmk,b.pmr,b.pd,b.pk,b.pr,b.pg3p,b.pg3pr,b.pgly] for b in bb]
                     f1 = open(filename1, 'w')
             
                     writer1 = csv.writer(f1)
@@ -229,50 +299,6 @@ def main_fn(core):
         
                     f1.close()
             
-                    
-# ############## uptake of g3p from nearby
-
-#             if len(clpt_g3p[counter])>0:
-#                 length=len(clpt_g3p[counter])
-#                 # print('length')
-#                 # print(length)
-#                 if length>=5:
-#                     i.pg3p+=5
-#                     g3p_xy=np.delete(g3p_xy,clpt_g3p[counter][:5],axis=0)
-#                     tree_g3p=spatial.KDTree(g3p_xy)
-#                     clpt_g3p=tree_g3p.query_ball_point(bb_xy,radius)
-#                 else:
-#                     i.pg3p+=length
-#                     g3p_xy=np.delete(g3p_xy,clpt_g3p[counter][:length],axis=0)
-#                     tree_g3p=spatial.KDTree(g3p_xy)
-#                     clpt_g3p=tree_g3p.query_ball_point(bb_xy,radius)
-                    
-                    
-#             g3pn=round(0.1*np.random.random()*i.pg3p)
-#             # print(g3pn)
-#             if g3pn>0:
-#                 g3p_cor=[[i.xpos,i.ypos] for b in range(g3pn)]
-#                 g3p_xy=np.append(g3p_xy,g3p_cor,axis=0)
-#                 i.pg3p-=g3pn
-            
-#             # print(g3p_xy)
-            
-            # if tnow%1==0:
-            #     kk=i.ssa()
-            
-            
-                # g3px_xy=np.append(g3px_xy, [[i.xpos,i.ypos, kk,
-                #                              2*(np.random.random()-0.5),
-                #                              2*(np.random.random()-0.5)]],axis=0)
-                
-        
-        
-            
-            
-            
-            
-            # print([i.xpos,i.ypos])
-            # print([[x,y] for x,y in zip(g3px_x,g3px_y)])
             
 ################ Velocity based update
             
@@ -303,16 +329,16 @@ def main_fn(core):
             
             if step == "RIGHT":
                 if i.xpos<box_width:
-                    i.xpos+=1
+                    i.xpos+=2
             elif step == "LEFT":
                 if i.xpos>0:
-                    i.xpos-=1
+                    i.xpos-=2
             elif step == "UP":
                 if i.ypos<box_width:
-                    i.ypos+=1
+                    i.ypos+=2
             elif step == "DOWN":
                 if i.ypos > 0:
-                    i.ypos-=1
+                    i.ypos-=2
                     
                     
 ################# Random walk update g3p
@@ -325,13 +351,15 @@ def main_fn(core):
             
         # g3p_xy=cell2.update(step,g3p_xy,'G3P')
         
-        g3p_xy=np.array(list(map(cell2.update_g3p,step,g3p_xy)))
+        if len(g3p_xy)>0:
+            g3p_xy=np.array(list(map(cell2.update_g3p,step,g3p_xy)))
         
         step=random.choices(directions,k=len(gly_xy))
             
         # gly_xy=cell2.update(step,gly_xy,'Gly')
         
-        gly_xy=np.array(list(map(cell2.update_gly,step,gly_xy)))
+        if len(gly_xy)>0:
+            gly_xy=np.array(list(map(cell2.update_gly,step,gly_xy)))
         
         # print(time.time()-start)
         
@@ -446,7 +474,7 @@ def main_fn(core):
 
 if __name__ == '__main__':
     with Pool(10) as p:
-        print(p.map(main_fn, range(1,11)))
+        print(p.map(main_fn, range(1,31)))
 
 
 
