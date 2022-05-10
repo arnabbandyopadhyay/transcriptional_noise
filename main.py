@@ -75,8 +75,8 @@ def main_fn(core):
     bb=[cell2.Cell(0, mu, lmt) for i in range(100)]
     
     
-    gly_xy=np.random.randint(box_width,size=[300000,2])
-    g3p_xy=np.random.randint(box_width,size=[300000,2])
+    gly_xy=np.random.randint(box_width,size=[10,2])
+    g3p_xy=np.random.randint(box_width,size=[200000,2])
     # plt.plot(gly_xy[:,0],gly_xy[:,1],'r.',markersize=1)
     # plt.savefig('gly_initial.png')
     
@@ -86,6 +86,7 @@ def main_fn(core):
         
         # print(len(gly_xy))
         tnow=round(tnow+dt,1)
+        
         if round(tnow,1)%1==0:
             print([tnow,len(bb),len(g3p_xy),len(gly_xy)])
         
@@ -107,15 +108,15 @@ def main_fn(core):
         
         
         
-        if len(gly_xy)>0:
-            neigh_gly = NearestNeighbors(radius=radius)
-            neigh_gly.fit(gly_xy)
-            clpt_gly=np.asarray(neigh_gly.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
+        # if len(gly_xy)>0:
+        #     neigh_gly = NearestNeighbors(radius=radius)
+        #     neigh_gly.fit(gly_xy)
+        #     clpt_gly=np.asarray(neigh_gly.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
             
-        if len(g3p_xy)>0:
-            neigh_g3p = NearestNeighbors(radius=radius)
-            neigh_g3p.fit(g3p_xy)
-            clpt_g3p=np.asarray(neigh_g3p.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
+        # if len(g3p_xy)>0:
+        #     neigh_g3p = NearestNeighbors(radius=radius)
+        #     neigh_g3p.fit(g3p_xy)
+        #     clpt_g3p=np.asarray(neigh_g3p.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
         
         
         # clpt_gly=neigh_gly.kneighbors(bb_xy,return_distance=False)
@@ -174,27 +175,28 @@ def main_fn(core):
      
     ########### uptake of glycerol from nearby   
                 if params.gly_uptake==1:
+                    pass
                             
-                    if len(clpt_gly[counter])>0:
-                        if i.pk>0:
+                #     if len(clpt_gly[counter])>0:
+                #         if i.pk>0:
                             
-                            length=int(1*len(clpt_gly[counter])*np.random.normal(i.pk,0.1))
+                #             length=int(1*len(clpt_gly[counter])*np.random.normal(i.pk,0.1))
                             
-                            if length>len(clpt_gly[counter]):
-                                length=len(clpt_gly[counter])
+                #             if length>len(clpt_gly[counter]):
+                #                 length=len(clpt_gly[counter])
                                 
                                 
-                            # print('length')
-                            # print(length)
+                #             # print('length')
+                #             # print(length)
                             
-                            if length>=0:
-                                i.pgly+=length
-                                gly_xy=np.delete(gly_xy,clpt_gly[counter][:length],axis=0)
+                #             if length>=0:
+                #                 i.pgly+=length
+                #                 gly_xy=np.delete(gly_xy,clpt_gly[counter][:length],axis=0)
                                 
-                                if len(gly_xy)>0:
-                                    neigh_gly = NearestNeighbors(radius=radius)
-                                    neigh_gly.fit(gly_xy)
-                                    clpt_gly=np.asarray(neigh_gly.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
+                #                 if len(gly_xy)>0:
+                #                     neigh_gly = NearestNeighbors(radius=radius)
+                #                     neigh_gly.fit(gly_xy)
+                #                     clpt_gly=np.asarray(neigh_gly.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
                                     
                                 
                                 
@@ -206,20 +208,39 @@ def main_fn(core):
                          
     ########### uptake of g3p from nearby  // no osmotic
                 if params.g3p_uptake==1:
-                    if len(clpt_g3p[counter])>0:
-                        if i.pk>0:
-                            length_g3p=int(1*len(clpt_g3p[counter])*np.random.normal(i.pk,0.1))
-                            if length_g3p>len(clpt_g3p[counter]):
-                                length_g3p=len(clpt_g3p[counter])
+                    # length_g3p=len(clpt_g3p[counter])
+                    # i.pg3p+=length_g3p
+                    # g3p_xy=np.delete(g3p_xy,clpt_g3p[counter][:length_g3p],axis=0)
+                    # if len(g3p_xy)>0:
+                    #     neigh_g3p = NearestNeighbors(radius=radius)
+                    #     neigh_g3p.fit(g3p_xy)
+                    #     clpt_g3p=np.asarray(neigh_g3p.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
+                    
+                    range_x=g3p_xy[(g3p_xy[:,0]>=i.xpos-radius) & (g3p_xy[:,0]<=i.xpos+radius)]
+                    range_y=range_x[(range_x[:,1]>=i.ypos-radius) & (range_x[:,1]<=i.ypos+radius)]
+                    
+                    to_add=int(0.2*len(np.unique(range_y,axis=0)))
+                    # print(to_add)
+                    
+                    i.pg3p+=to_add
+                    # t_delete=range_y[np.random.choice(range(len(np.unique(range_y,axis=0))),to_add)]
+                    # print(range_y)
+                    g3p_xy=np.delete(g3p_xy,range_y[0:to_add],axis=0)
+                
+                    # if len(clpt_g3p[counter])>0:
+                    #     if i.pk>0:
+                    #         length_g3p=int(1*len(clpt_g3p[counter])*np.random.normal(i.pk,0.1))
+                    #         if length_g3p>len(clpt_g3p[counter]):
+                    #             length_g3p=len(clpt_g3p[counter])
                                 
-                            if length_g3p>=0:
-                                i.pg3p+=length_g3p
-                                g3p_xy=np.delete(g3p_xy,clpt_g3p[counter][:length_g3p],axis=0)
+                    #         if length_g3p>=0:
+                    #             i.pg3p+=length_g3p
+                    #             g3p_xy=np.delete(g3p_xy,clpt_g3p[counter][:length_g3p],axis=0)
                                 
-                                if len(g3p_xy)>0:
-                                    neigh_g3p = NearestNeighbors(radius=radius)
-                                    neigh_g3p.fit(g3p_xy)
-                                    clpt_g3p=np.asarray(neigh_g3p.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
+                    #             if len(g3p_xy)>0:
+                    #                 neigh_g3p = NearestNeighbors(radius=radius)
+                    #                 neigh_g3p.fit(g3p_xy)
+                    #                 clpt_g3p=np.asarray(neigh_g3p.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
         
                                 
                                 
@@ -268,36 +289,57 @@ def main_fn(core):
                 if method=='stochastic':
                     kk=i.ssa()
                 if method=='deterministic':
-                    kk=i.deterministic_ode()
+                    kk=i.simple_ode()
+                if method=='sde':
+                    kk=i.simple_sde()
                 
-                if len(bb)>max_cells-500:
+        # if len(bb)>max_cells-500:
+    
+        #     fln='core_%s' % core
+        #     filename1 = fln + "_histogram_pd_%s.csv" % tnow
             
-                    fln='core_%s' % core
-                    filename1 = fln + "_histogram_pd_%s.csv" % tnow
+        #     # dat1=[[b.pmd,b.pmk,b.pmr,b.pd,b.pk,b.pr,b.pg3p,b.pg3pr,b.pgly] for b in bb]
+        #     dat1=[[b.pmd,b.pmr,b.pd,b.pr,b.pg3p] for b in bb]
+        #     f1 = open(filename1, 'w')
+    
+        #     writer1 = csv.writer(f1)
+    
+        #     writer1.writerows(dat1)
+
+        #     f1.close()
                     
-                    dat1=[[b.pmd,b.pmk,b.pmr,b.pd,b.pk,b.pr,b.pg3p,b.pg3pr,b.pgly] for b in bb]
-                    f1 = open(filename1, 'w')
+               
+        if tnow==0.1:
             
-                    writer1 = csv.writer(f1)
+
+            fln='init_core_%s' % core
+            filename1 = fln + "_histogram_%s.csv" % tnow
             
-                    writer1.writerows(dat1)
-        
-                    f1.close()
+            # dat1=[[b.pmd,b.pmk,b.pmr,b.pd,b.pk,b.pr,b.pg3p,b.pg3pr,b.pgly] for b in bb]
+            dat1=[[b.mu, b.pmd,b.pmr,b.pd,b.pr,b.pg3p] for b in bb]
+            f1 = open(filename1, 'w')
+    
+            writer1 = csv.writer(f1)
+    
+            writer1.writerows(dat1)
+
+            f1.close()
                     
                     
-                if round(tnow,1)%50==0:
-        
-                    fln='tnow_core_%s' % core
-                    filename1 = fln + "_histogram_%s.csv" % tnow
-                    
-                    dat1=[[b.pmd,b.pmk,b.pmr,b.pd,b.pk,b.pr,b.pg3p,b.pg3pr,b.pgly] for b in bb]
-                    f1 = open(filename1, 'w')
+        if round(tnow,1)%50==0:
+
+            fln='tnow_core_%s' % core
+            filename1 = fln + "_histogram_%s.csv" % tnow
             
-                    writer1 = csv.writer(f1)
-            
-                    writer1.writerows(dat1)
-        
-                    f1.close()
+            # dat1=[[b.pmd,b.pmk,b.pmr,b.pd,b.pk,b.pr,b.pg3p,b.pg3pr,b.pgly] for b in bb]
+            dat1=[[b.pmd,b.pmr,b.pd,b.pr,b.pg3p] for b in bb]
+            f1 = open(filename1, 'w')
+    
+            writer1 = csv.writer(f1)
+    
+            writer1.writerows(dat1)
+
+            f1.close()
             
             
 ################ Velocity based update
@@ -324,21 +366,21 @@ def main_fn(core):
               
 ################# Random walk update cells
 
-            directions = ["UP", "DOWN", "LEFT", "RIGHT"]
-            step = random.choice(directions)
-            
-            if step == "RIGHT":
-                if i.xpos<box_width:
-                    i.xpos+=2
-            elif step == "LEFT":
-                if i.xpos>0:
-                    i.xpos-=2
-            elif step == "UP":
-                if i.ypos<box_width:
-                    i.ypos+=2
-            elif step == "DOWN":
-                if i.ypos > 0:
-                    i.ypos-=2
+        directions = ["UP", "DOWN", "LEFT", "RIGHT"]
+        step = random.choice(directions)
+        
+        if step == "RIGHT":
+            if i.xpos<box_width:
+                i.xpos+=2
+        elif step == "LEFT":
+            if i.xpos>0:
+                i.xpos-=2
+        elif step == "UP":
+            if i.ypos<box_width:
+                i.ypos+=2
+        elif step == "DOWN":
+            if i.ypos > 0:
+                i.ypos-=2
                     
                     
 ################# Random walk update g3p
@@ -425,6 +467,7 @@ def main_fn(core):
     
   
     filename1 = "histogram_pd_%s.csv" % core
+    print('entered')
     # filename2 = "histogram_pmd_%s.csv" % core
     # filename = "histogram_1.csv"
     f1 = open(filename1, 'w')
@@ -443,21 +486,21 @@ def main_fn(core):
     # f2.close()
     
     
-    file = "gly_%s.csv" % core
-    f = open(file, 'w')
-    wr = csv.writer(f)
-    nm=[len(gly_xy)]
-    wr.writerow(nm)
-    f.close()
+    # file = "gly_%s.csv" % core
+    # f = open(file, 'w')
+    # wr = csv.writer(f)
+    # nm=[len(gly_xy)]
+    # wr.writerow(nm)
+    # f.close()
     
     g3p_xy=np.array(g3p_xy)
     
     
-    plt.plot(gly_xy[:,0],gly_xy[:,1],'r.',markersize=1)
+    # plt.plot(gly_xy[:,0],gly_xy[:,1],'r.',markersize=1)
     
-    file = "gly_%s.png" % core
-    plt.savefig(file)
-    plt.close()
+    # file = "gly_%s.png" % core
+    # plt.savefig(file)
+    # plt.close()
     
     
     

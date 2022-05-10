@@ -10,12 +10,12 @@ import random
 
 box_width=500
 random.seed(5)
-mus=[random.randrange(30,35) for rn in range(100)]
+mus=[random.randrange(45,60) for rn in range(100)]
 sigma = 5
 dt = 0.1
 max_cells=10000
-radius=3
-gly_uptake=1 #from environment=1, 0 otherwise
+radius=1
+gly_uptake=0 #from environment=1, 0 otherwise
 g3p_uptake=1 #from environment=1, 0 otherwise
 max_lim=[5,25]
-method='deterministic'
+method='stochastic'

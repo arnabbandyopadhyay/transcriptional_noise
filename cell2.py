@@ -20,6 +20,8 @@ from scipy.stats import kde
 from numba import jit
 import params
 import ode_int
+import sde
+import sdeint
 from scipy.integrate import odeint,solve_ivp
 from gillespy2.solvers.numpy import (
  	NumPySSASolver,
@@ -103,16 +105,27 @@ class Cell:
         # self.generation = 0
         
         
+        # #### deterministic ode
+        # [self.ppd, self.ppd_r, self.pfk, self.pfk_r, self.ppt, 
+        # self.ppt_r, self.ppr, self.pg3p, self.pmd, self.pmk, 
+        # self.pmr, self.pmf, self.pmt, self.pd, self.pk, 
+        # self.pr, self.pf, self.pt, self.pgly, self.pglyk, 
+        # self.pg3pr, self.pg3pd] = [1,0,1,0,1,
+        # 0,1,np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt),
+        # np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt),
+        # np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt),
+        # np.random.randint(0,lmt),np.random.randint(0,lmt)]
         
-        [self.ppd, self.ppd_r, self.pfk, self.pfk_r, self.ppt, 
-        self.ppt_r, self.ppr, self.pg3p, self.pmd, self.pmk, 
-        self.pmr, self.pmf, self.pmt, self.pd, self.pk, 
-        self.pr, self.pf, self.pt, self.pgly, self.pglyk, 
-        self.pg3pr, self.pg3pd] = [1,0,1,0,1,
+        
+        
+        ###### simple ode
+        
+        [self.ppd, self.ppd_r, self.ppt, 
+        self.ppt_r, self.ppr, self.pg3p, self.pmd,  
+        self.pmr, self.pmt, self.pd, 
+        self.pr, self.pt] = [1,0,1,
         0,1,np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt),
-        np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt),
-        np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt),
-        np.random.randint(0,lmt),np.random.randint(0,lmt)]
+        np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt)]
         
         if 'xpos' in kwargs: self.xpos = kwargs['xpos']
         else: self.xpos = np.random.randint(box_width) #round(np.random.random(),2)*box_width
@@ -129,37 +142,58 @@ class Cell:
         
         
             
-        
+    # ##### deterministic ode    
+    # @classmethod  
+    # def clone(cls, b,g3p,md,mk,mr,mf,mt,d,k,r,f,t,gly,glyk,g3pr,g3pd):
+    #     return cls(birthtime=b.tnow, mu=b.mu, lmt=b.lmt, volume=1, nextdiv=b.tnow+np.random.randint(b.mu-sigma,b.mu+sigma),
+    #                ppd = 1, ppd_r=0, pfk = 1, pfk_r=0, ppt=1, ppt_r=0, ppr=0,
+    #                pg3p=g3p, pmd=md,pmk=mk,pmr=mr,pmf=mf, pmt=mt,pd=d,pk=k,pr=r, pf=f, pt=t, pgly=gly, 
+    #                pglyk=glyk, pg3pr=g3pr, pg3pd=g3pd,
+    #                xpos = b.xpos,
+    #                ypos = b.ypos,
+    #                xvel=2*(np.random.random()-0.5)/2,
+    #                yvel=2*(np.random.random()-0.5)/2)
+    
+     ##### simple ode    
     @classmethod  
-    def clone(cls, b,g3p,md,mk,mr,mf,mt,d,k,r,f,t,gly,glyk,g3pr,g3pd):
+    def clone(cls, b,g3p,md,mr,mt,d,r,t):
         return cls(birthtime=b.tnow, mu=b.mu, lmt=b.lmt, volume=1, nextdiv=b.tnow+np.random.randint(b.mu-sigma,b.mu+sigma),
-                   ppd = 1, ppd_r=0, pfk = 1, pfk_r=0, ppt=1, ppt_r=0, ppr=0,
-                   pg3p=g3p, pmd=md,pmk=mk,pmr=mr,pmf=mf, pmt=mt,pd=d,pk=k,pr=r, pf=f, pt=t, pgly=gly, 
-                   pglyk=glyk, pg3pr=g3pr, pg3pd=g3pd,
+                   ppd = 1, ppd_r=0, ppt=1, ppt_r=0, ppr=0,
+                   pg3p=g3p, pmd=md, pmr=mr, pmt=mt,pd=d,pr=r, pt=t,
                    xpos = b.xpos,
                    ypos = b.ypos,
                    xvel=2*(np.random.random()-0.5)/2,
                    yvel=2*(np.random.random()-0.5)/2)
     def gen(self):
         self.generation += 1
-
+        
+        ####### simple ode section
     def proliferate(self):
-
+        
         g3p=self.pg3p
         md=self.pmd
-        mk=self.pmk
         mr=self.pmr
-        mf=self.pmf
         mt=self.pmt
-        d=self.pd
-        k=self.pk
+        d=self.pd       
         r=self.pr
-        f=self.pf
         t=self.pt
-        gly=self.pgly
-        glyk=self.pglyk
-        g3pr=self.pg3pr
-        g3pd=self.pg3pd
+        
+        if np.isnan(g3p)==True:
+            g3p=0
+            
+        if np.isnan(md)==True:
+            md=0
+        if np.isnan(mr)==True:
+            mr=0
+        if np.isnan(mt)==True:
+            mt=0
+        if np.isnan(d)==True:
+            d=0
+        if np.isnan(r)==True:
+            r=0
+        if np.isnan(t)==True:
+            t=0
+       
         
         # g3p1=int(0.7*g3p)#int(np.random.random()*g3p)
         # md1=int(0.7*md)#int(np.random.random()*md)
@@ -173,29 +207,83 @@ class Cell:
         
         g3p1=int(np.random.random()*g3p)
         md1=int(np.random.random()*md)
-        mk1=int(np.random.random()*mk)
         mr1=int(np.random.random()*mr)
-        mf1=int(np.random.random()*mf)
         mt1=int(np.random.random()*mt)
         d1=int(np.random.random()*d)
-        k1=int(np.random.random()*k)
         r1=int(np.random.random()*r)
-        f1=int(np.random.random()*f)
         t1=int(np.random.random()*t)
-        gly1=int(np.random.random()*gly)
-        glyk1=int(np.random.random()*glyk)
-        g3pr1=int(np.random.random()*g3pr)
-        g3pd1=int(np.random.random()*g3pd)
+       
         
         
-        nl=[Cell.clone(self,g3p1,md1, mk1, mr1,mf1, mt1, d1, k1, r1, f1, t1, gly1, glyk1, g3pr1, g3pd1),
-            Cell.clone(self,g3p-g3p1,md-md1,mk-mk1,mr-mr1,mf-mf1, mt-mt1, 
-                       d-d1,k-k1,r-r1, f-f1, t-t1, gly-gly1, glyk-glyk1, g3pr-g3pr1, g3pd-g3pd1)]
+        nl=[Cell.clone(self,g3p1, md1, mr1, mt1, d1, r1, t1),
+            Cell.clone(self,g3p-g3p1,md-md1,mr-mr1, mt-mt1, 
+                       d-d1,r-r1, t-t1)]
         
         # nl=[Cell.clone(self,g3p, md, mk, mr, d, k, r, gly, g3pr),
         #     Cell.clone(self,g3p, md, mk, mr, d, k, r, gly, g3pr)]
 
         return nl
+        
+        
+        
+        
+        
+        
+     #### Deterministic ode section       
+
+    # def proliferate(self):
+
+    #     g3p=self.pg3p
+    #     md=self.pmd
+    #     mk=self.pmk
+    #     mr=self.pmr
+    #     mf=self.pmf
+    #     mt=self.pmt
+    #     d=self.pd
+    #     k=self.pk
+    #     r=self.pr
+    #     f=self.pf
+    #     t=self.pt
+    #     gly=self.pgly
+    #     glyk=self.pglyk
+    #     g3pr=self.pg3pr
+    #     g3pd=self.pg3pd
+        
+    #     # g3p1=int(0.7*g3p)#int(np.random.random()*g3p)
+    #     # md1=int(0.7*md)#int(np.random.random()*md)
+    #     # mk1=int(0.7*mk)#int(np.random.random()*mk)
+    #     # mr1=int(0.7*mr)#int(np.random.random()*mr)
+    #     # d1=int(0.7*d)#int(np.random.random()*d)
+    #     # k1=int(0.7*k)#int(np.random.random()*k)
+    #     # r1=int(0.7*r)#int(np.random.random()*r)
+    #     # gly1=int(0.7*gly)#int(np.random.random()*gly)
+    #     # g3pr1=int(0.7*g3pr)#int(np.random.random()*g3pr)
+        
+    #     g3p1=int(np.random.random()*g3p)
+    #     md1=int(np.random.random()*md)
+    #     mk1=int(np.random.random()*mk)
+    #     mr1=int(np.random.random()*mr)
+    #     mf1=int(np.random.random()*mf)
+    #     mt1=int(np.random.random()*mt)
+    #     d1=int(np.random.random()*d)
+    #     k1=int(np.random.random()*k)
+    #     r1=int(np.random.random()*r)
+    #     f1=int(np.random.random()*f)
+    #     t1=int(np.random.random()*t)
+    #     gly1=int(np.random.random()*gly)
+    #     glyk1=int(np.random.random()*glyk)
+    #     g3pr1=int(np.random.random()*g3pr)
+    #     g3pd1=int(np.random.random()*g3pd)
+        
+        
+    #     nl=[Cell.clone(self,g3p1,md1, mk1, mr1,mf1, mt1, d1, k1, r1, f1, t1, gly1, glyk1, g3pr1, g3pd1),
+    #         Cell.clone(self,g3p-g3p1,md-md1,mk-mk1,mr-mr1,mf-mf1, mt-mt1, 
+    #                    d-d1,k-k1,r-r1, f-f1, t-t1, gly-gly1, glyk-glyk1, g3pr-g3pr1, g3pd-g3pd1)]
+        
+    #     # nl=[Cell.clone(self,g3p, md, mk, mr, d, k, r, gly, g3pr),
+    #     #     Cell.clone(self,g3p, md, mk, mr, d, k, r, gly, g3pr)]
+
+    #     return nl
     
     # def ssa(self):
     #     ita=self.pd/(70+self.pd)
@@ -221,35 +309,38 @@ class Cell:
     #     self.ppar=results['PAR'][-1]
     
     def ssa(self):
-        ita=self.pd/(70+self.pd)
-        model = gp.Gillespie_bistable(self.ppd, self.ppd_r, self.pfk, self.pfk_r, self.ppt, self.ppt_r,
-                  self.ppr, self.pg3p, self.pmd, self.pmk, self.pmr, self.pmf, self.pmt, self.pd, self.pk, 
-                  self.pr, self.pf, self.pt, 
-                  self.pgly, self.pglyk, self.pg3pr, self.pg3pd, ita)
-        results = model.run(TauLeapingSolver)
-        # results = model.run(NumPySSASolver)
+        # ita=self.pd/(70+self.pd)
+        # model = gp.Gillespie_bistable(self.ppd, self.ppd_r, self.pfk, self.pfk_r, self.ppt, self.ppt_r,
+        #           self.ppr, self.pg3p, self.pmd, self.pmk, self.pmr, self.pmf, self.pmt, self.pd, self.pk, 
+        #           self.pr, self.pf, self.pt, 
+        #           self.pgly, self.pglyk, self.pg3pr, self.pg3pd, ita)
+        model = gp.Gillespie_bistable(self.ppd, self.ppd_r, self.ppt, self.ppt_r,
+                  self.ppr, self.pg3p, self.pmd, self.pmr, self.pmt, self.pd,  
+                  self.pr, self.pt)
+        # results = model.run(TauLeapingSolver)
+        results = model.run(NumPySSASolver)
         self.ppd=results['pD'][-1]
         self.ppd_r=results['pD_R'][-1] 
-        self.pfk=results['pFK'][-1]
-        self.pfk_r=results['pFK_R'][-1] 
+        # self.pfk=results['pFK'][-1]
+        # self.pfk_r=results['pFK_R'][-1] 
         self.ppt=results['pT'][-1] 
         self.ppt_r=results['pT_R'][-1]
         self.ppr=results['pR'][-1] 
         self.pg3p=results['G3P'][-1]
         self.pmd=results['mD'][-1] 
-        self.pmk=results['mK'][-1] 
+        # self.pmk=results['mK'][-1] 
         self.pmr=results['mR'][-1] 
-        self.pmf=results['mF'][-1] 
+        # self.pmf=results['mF'][-1] 
         self.pmt=results['mT'][-1] 
         self.pd=results['D'][-1] 
-        self.pk=results['K'][-1] 
+        # self.pk=results['K'][-1] 
         self.pr=results['R'][-1] 
-        self.pf=results['F'][-1] 
+        # self.pf=results['F'][-1] 
         self.pt=results['T'][-1] 
-        self.pgly=results['Gly'][-1] 
-        self.pglyk=results['GlyK'][-1] 
-        self.pg3pr=results['G3PR'][-1] 
-        self.pg3pd=results['G3PD'][-1] 
+        # self.pgly=results['Gly'][-1] 
+        # self.pglyk=results['GlyK'][-1] 
+        # self.pg3pr=results['G3PR'][-1] 
+        # self.pg3pd=results['G3PD'][-1] 
         
     def deterministic_ode(self):
             
@@ -280,10 +371,49 @@ class Cell:
         self.pglyk=results.y[15,-1] 
         self.pg3pr=results.y[16,-1] 
         self.pg3pd=results.y[17,-1] 
+        
+    def simple_ode(self):
+        
+        # t = np.linspace(0,5,100)
+        z0=[self.ppd_r, self.ppt_r,
+             self.pmd, self.pmt, self.pmr, self.pd, self.pt, self.pr, 
+             self.pg3p]
+        results = solve_ivp(ode_int.simple_model,(0,2),z0, method='LSODA',t_eval=np.linspace(0,2,20).tolist())
+        self.ppd=1-results.y[0,-1]
+        self.ppd_r=results.y[0,-1] 
+        self.ppt=1-results.y[1,-1]
+        self.ppt_r=results.y[1,-1]
+        self.ppr=1
+        self.pmd=results.y[2,-1] 
+        self.pmt=results.y[3,-1]
+        self.pmr=results.y[4,-1] 
+        self.pd=results.y[5,-1] 
+        self.pt=results.y[6,-1] 
+        self.pr=results.y[7,-1] 
+        self.pg3p=results.y[8,-1]
+        
+        
+    def simple_sde(self):
+        
+        # t = np.linspace(0,5,100)
+        z0=[self.ppd_r, self.ppt_r,
+             self.pmd, self.pmt, self.pmr, self.pd, self.pt, self.pr, 
+             self.pg3p]
+        tspan = np.linspace(0, 2., 1000)
+        results = sdeint.itoEuler(sde.simple_model, sde.GG, z0, tspan)
+        self.ppd=1-results[-1,0]
+        self.ppd_r=results[-1,0] 
+        self.ppt=1-results[-1,1]
+        self.ppt_r=results[-1,1]
+        self.ppr=1
+        self.pmd=results[-1,2] 
+        self.pmt=results[-1,3]
+        self.pmr=results[-1,4] 
+        self.pd=results[-1,5] 
+        self.pt=results[-1,6] 
+        self.pr=results[-1,7] 
+        self.pg3p=results[-1,8]
             
-        
-        
-        
         
         
 
