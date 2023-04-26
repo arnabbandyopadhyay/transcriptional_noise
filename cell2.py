@@ -46,16 +46,27 @@ box_width = params.box_width
 
 class Cell:
     tnow=0
+
     
-    def __init__(self, birthtime, mu, lmt, **kwargs):
+    
+    def __init__(self, birthtime, gmax, lmt, factor, myx, **kwargs):
         
         
-        
+        self.sigma=params.sigma
         self.birthtime=birthtime
-        self.mu=mu
+        self.gmax=gmax
         self.lmt=lmt
         self.volume=1 
-        self.nextdiv=self.birthtime+np.random.randint(mu-sigma, mu+sigma)#np.random.normal(mu, sigma)
+        self.myx=myx
+        self.influx=myx#random.uniform(0.01,self.myx)
+        # self.nextdiv=self.birthtime+np.random.randint(mu-sigma, mu+sigma)#np.random.normal(mu, sigma)
+        
+        # self.factor=factor
+        
+            
+        
+        
+        
         
         # if 'pinpd' in kwargs: self.pinpd = kwargs['pinpd']
         # else: self.pinpd = 1
@@ -120,12 +131,74 @@ class Cell:
         
         ###### simple ode
         
-        [self.ppd, self.ppd_r, self.ppt, 
-        self.ppt_r, self.ppr, self.pg3p, self.pmd,  
-        self.pmr, self.pmt, self.pd, 
-        self.pr, self.pt] = [1,0,1,
-        0,1,np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt),
-        np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt),np.random.randint(0,lmt)]
+        # [self.ppd, self.ppd_r, self.ppt, 
+        # self.ppt_r, self.ppr, self.pg3p, self.pmd,  
+        # self.pmr, self.pmt, self.pd, 
+        # self.pr, self.pt] = [1,0,1,
+        # 0,1,np.random.randint(lmt-5,lmt),np.random.randint(lmt-5,lmt),
+        # 2,#np.random.randint(lmt-5,lmt),
+        # np.random.randint(lmt-5,lmt),np.random.randint(lmt-5,lmt),
+        # 10,#np.random.randint(lmt-5,lmt),
+        # np.random.randint(lmt-5,lmt)]
+        
+        # [self.ppd, self.ppd_r, self.ppk, 
+        # self.ppk_r, self.ppr, self.pg3p, self.pmd,  
+        # self.pmr, self.pmk, self.pd, 
+        # self.pr, self.pk, self.pg3pr, self.ppar] = [1,0,1,
+        # 0,1,np.random.randint(0,50),np.random.randint(lmt-5,lmt),
+        # 2,#np.random.randint(lmt-5,lmt),
+        # np.random.randint(lmt-5,lmt),np.random.randint(lmt-5,lmt),
+        # 5,#np.random.randint(lmt-5,lmt),
+        # np.random.randint(lmt-5,lmt),np.random.randint(lmt-5,lmt),1]
+                                                    
+        [self.ppd, self.ppd_r, self.ppk, 
+        self.ppk_r, self.ppr, self.pg3p, self.pmd,  
+        self.pmr, self.pmk, self.pd, 
+        self.pr, self.pk, self.pg3pr, self.ppar] = gp.gly_dat[random.randrange(0,199),:]
+        
+        # self.pd=np.random.choice([1,2,3,4,5,1,3,5,60,70,80])
+                                                    
+                                                    
+        # [self.ppd, self.ppd_r, self.ppk, 
+        # self.ppk_r, self.ppr, self.pg3p, self.pmd,  
+        # self.pmr, self.pmk, self.pd, 
+        # self.pr, self.pk, self.pg3pr, self.ppar] = [1,0,1,0,1,10,1,1,1,1,1,1,1,1]
+                                                    
+                                                    
+        # self.mu=90/(1+self.pd/(20+self.pd))
+        # self.mu=30*(1+2*(self.pd*self.pd)/(500+self.pd*self.pd))
+        # self.mu=40*(1+2*(self.pr*self.pr)/(300+self.pr*self.pr))
+        # if self.pr>=20:
+        #     # self.mu=params.gmax*(np.exp(0.7*self.pr*self.pr/(100+self.pr*self.pr)))
+        #     self.mu=random.randrange(50,100)
+        # else:
+        #     self.mu=random.randrange(30,40)
+        
+        # self.mu=np.random.choice(params.gmax)*(np.exp(0.9*self.pr*self.pr/(100+self.pr*self.pr)))#0.7-1.0
+        # self.mu=self.gmax*(np.exp(0.5*self.pr*self.pr/(100+self.pr*self.pr)))#0.7-1.0
+        # self.mu=self.gmax*(1+1.2*self.pr*self.pr/(150*150+self.pr*self.pr))#0.7-1.0
+        self.mu=self.gmax*(1+1.5*self.pr*self.pr/(100+self.pr*self.pr))
+        # if self.pr>=20:
+        #     self.mu=self.gmax*(1+1.5*self.pr*self.pr/(100+self.pr*self.pr))
+        # else:
+        #     self.mu=self.gmax
+        
+        if self.mu<30:
+            self.mu=30
+        self.nextdiv=self.birthtime+self.mu
+        self.factor=np.exp(-(self.mu-30)/50)
+        
+        # self.mu=30*(1+2*self.pg3p/(20+self.pg3p))
+                                         
+        # [self.ppd, self.ppd_r, self.ppk, 
+        # self.ppk_r, self.ppr, self.pg3p, self.pmd,  
+        # self.pmr, self.pmk, self.pd, 
+        # self.pr, self.pk, self.pg3pr] = [1,0,1,
+        # 0,1,np.random.randint(0,lmt),np.random.randint(0,lmt),
+        # np.random.randint(0,lmt),
+        # np.random.randint(0,lmt),np.random.randint(0,lmt),
+        # np.random.randint(0,lmt),
+        # np.random.randint(0,lmt),np.random.randint(0,lmt)]
         
         if 'xpos' in kwargs: self.xpos = kwargs['xpos']
         else: self.xpos = np.random.randint(box_width) #round(np.random.random(),2)*box_width
@@ -155,44 +228,119 @@ class Cell:
     #                yvel=2*(np.random.random()-0.5)/2)
     
      ##### simple ode    
+    # @classmethod  
+    # def clone(cls, b,ppd_i,ppd_r_i,ppt_i,ppt_r_i,ppr_i,g3p,md,mr,mt,d,r,t):
+    #     return cls(birthtime=b.tnow, mu=b.mu, lmt=b.lmt, volume=1, nextdiv=b.tnow+np.random.randint(b.mu-sigma,b.mu+sigma),
+    #                ppd = ppd_i, ppd_r=ppd_r_i, ppt=ppt_i, ppt_r=ppt_r_i, ppr=ppr_i,
+    #                pg3p=g3p, pmd=md, pmr=mr, pmt=mt,pd=d,pr=r, pt=t,
+    #                # factor=b.factor,
+    #                factor=np.random.choice(params.factors),
+    #                xpos = b.xpos,
+    #                ypos = b.ypos,
+    #                xvel=2*(np.random.random()-0.5)/2,
+    #                yvel=2*(np.random.random()-0.5)/2)
+    
+    
     @classmethod  
-    def clone(cls, b,g3p,md,mr,mt,d,r,t):
-        return cls(birthtime=b.tnow, mu=b.mu, lmt=b.lmt, volume=1, nextdiv=b.tnow+np.random.randint(b.mu-sigma,b.mu+sigma),
-                   ppd = 1, ppd_r=0, ppt=1, ppt_r=0, ppr=0,
-                   pg3p=g3p, pmd=md, pmr=mr, pmt=mt,pd=d,pr=r, pt=t,
-                   xpos = b.xpos,
-                   ypos = b.ypos,
-                   xvel=2*(np.random.random()-0.5)/2,
-                   yvel=2*(np.random.random()-0.5)/2)
+    def clone(cls, b):
+        
+        if params.inheritance==1:
+            return cls(birthtime=b.tnow, gmax=b.gmax, mu=b.mu, myx=b.myx, lmt=b.lmt, volume=1, nextdiv=b.tnow+b.mu,
+                    factor=b.factor, #np.random.choice(params.factors)
+                    influx=b.influx,
+                    xpos = b.xpos,
+                    ypos = b.ypos,
+                    xvel=2*(np.random.random()-0.5)/2,
+                    yvel=2*(np.random.random()-0.5)/2)
+        elif params.inheritance==0:
+            # ndiv=np.random.randint(b.mu-b.sigma, b.mu+b.sigma)
+        # if ndiv<30:
+        #     ndiv=30
+        # ndiv=30*(1+2*b.pd/(20+b.pd))
+        # ndiv=90/(1+b.pd/(20+b.pd))
+        # ndiv=30*(1+2*b.pg3p/(20+b.pg3p))
+        # ndiv=30*(1+2*(b.pd*b.pd)/(500+b.pd*b.pd))
+            return cls(birthtime=b.tnow, gmax=b.gmax, mu=b.mu, myx=b.myx, lmt=b.lmt, volume=1, nextdiv=b.tnow,
+                    factor=b.factor, #np.random.choice(params.factors)
+                    influx=b.myx,#random.uniform(0.01,b.myx),
+                    xpos = b.xpos,
+                    ypos = b.ypos,
+                    xvel=2*(np.random.random()-0.5)/2,
+                    yvel=2*(np.random.random()-0.5)/2)
+       
+        
+    
+    
+    
+    
+    # def clone(self,ppd_i,ppd_r_i,ppt_i,ppt_r_i,ppr_i,g3p,md,mr,mt,d,r,t):
+    #     birthtime=self.tnow
+    #     mu=self.mu
+    #     lmt=self.lmt
+    #     volume=1
+    #     nextdiv=self.tnow+np.random.randint(self.mu-sigma,self.mu+sigma)
+    #     ppd = ppd_i
+    #     ppd_r=ppd_r_i
+    #     ppt=ppt_i
+    #     ppt_r=ppt_r_i
+    #     ppr=ppr_i
+    #     pg3p=g3p
+    #     pmd=md
+    #     pmr=mr
+    #     pmt=mt
+    #     pd=d
+    #     pr=r 
+    #     pt=t
+    #     # factor=b.factor,
+    #     factor=np.random.choice(params.factors)
+    #     xpos = self.xpos
+    #     ypos = self.ypos
+    #     xvel=2*(np.random.random()-0.5)/2
+    #     yvel=2*(np.random.random()-0.5)/2
+        
     def gen(self):
         self.generation += 1
         
         ####### simple ode section
     def proliferate(self):
+        # newborn_mu1=np.random.randint(self.mu-self.sigma,self.mu+self.sigma)
+        # newborn_mu2=np.random.randint(self.mu-self.sigma,self.mu+self.sigma)
+        # if newborn_mu1<30:
+        #     newborn_mu1=30
+        # if newborn_mu2<30:
+        #     newborn_mu2=30
         
-        g3p=self.pg3p
-        md=self.pmd
-        mr=self.pmr
-        mt=self.pmt
-        d=self.pd       
-        r=self.pr
-        t=self.pt
+        ppd_i=self.ppd
+        ppd_r_i=self.ppd_r
+        ppk_i=self.ppk
+        ppk_r_i=self.ppk_r
+        ppr_i=self.ppr
         
-        if np.isnan(g3p)==True:
-            g3p=0
+        g3p=1*self.pg3p
+        md=1*self.pmd
+        mr=1*self.pmr
+        mk=1*self.pmk
+        d=1*self.pd       
+        r=1*self.pr
+        k=1*self.pk
+        g3pr=1*self.pg3pr
+        ppar=self.ppar
+        
+        # if np.isnan(g3p)==True:
+        #     g3p=0
             
-        if np.isnan(md)==True:
-            md=0
-        if np.isnan(mr)==True:
-            mr=0
-        if np.isnan(mt)==True:
-            mt=0
-        if np.isnan(d)==True:
-            d=0
-        if np.isnan(r)==True:
-            r=0
-        if np.isnan(t)==True:
-            t=0
+        # if np.isnan(md)==True:
+        #     md=0
+        # if np.isnan(mr)==True:
+        #     mr=0
+        # if np.isnan(mk)==True:
+        #     mk=0
+        # if np.isnan(d)==True:
+        #     d=0
+        # if np.isnan(r)==True:
+        #     r=0
+        # if np.isnan(k)==True:
+        #     k=0
        
         
         # g3p1=int(0.7*g3p)#int(np.random.random()*g3p)
@@ -208,19 +356,105 @@ class Cell:
         g3p1=int(np.random.random()*g3p)
         md1=int(np.random.random()*md)
         mr1=int(np.random.random()*mr)
-        mt1=int(np.random.random()*mt)
+        mk1=int(np.random.random()*mk)
         d1=int(np.random.random()*d)
         r1=int(np.random.random()*r)
-        t1=int(np.random.random()*t)
+        k1=int(np.random.random()*k)
+        g3pr1=int(np.random.random()*g3pr)
+        
+        
+        
+        # g3p1=int(0.9*g3p)
+        # md1=int(0.9*md)
+        # mr1=int(0.9*mr)
+        # mk1=int(0.9*mk)
+        # d1=int(0.9*d)
+        # r1=int(0.9*r)
+        # k1=int(0.9*k)
+        # g3pr1=int(0.9*g3pr)
        
         
         
-        nl=[Cell.clone(self,g3p1, md1, mr1, mt1, d1, r1, t1),
-            Cell.clone(self,g3p-g3p1,md-md1,mr-mr1, mt-mt1, 
-                       d-d1,r-r1, t-t1)]
+        # nl=[Cell.clone(self,ppd_i,ppd_r_i,ppt_i,ppt_r_i,ppr_i,g3p1, md1, mr1, mt1, d1, r1, t1),
+        #     Cell.clone(self,ppd_i,ppd_r_i,ppt_i,ppt_r_i,ppr_i,g3p-g3p1,md-md1,mr-mr1, mt-mt1, 
+        #                 d-d1,r-r1, t-t1)]
+        
+        nl=[Cell.clone(self),
+            Cell.clone(self)]
         
         # nl=[Cell.clone(self,g3p, md, mk, mr, d, k, r, gly, g3pr),
         #     Cell.clone(self,g3p, md, mk, mr, d, k, r, gly, g3pr)]
+        
+        nl[0].ppd, nl[1].ppd = ppd_i,ppd_i
+        nl[0].ppd_r,nl[1].ppd_r=ppd_r_i,ppd_r_i
+        nl[0].ppk,nl[1].ppk=ppk_i,ppk_i
+        nl[0].ppk_r,nl[1].ppk_r=ppk_r_i,ppk_r_i
+        nl[0].ppr,nl[1].ppr=ppr_i,ppr_i
+        nl[0].pg3p,nl[1].pg3p=g3p1,g3p-g3p1
+        nl[0].pmd,nl[1].pmd=md1,md-md1
+        nl[0].pmr,nl[1].pmr=mr1, mr-mr1
+        nl[0].pmk,nl[1].pmk=mk1, mk-mk1
+        nl[0].pd,nl[1].pd=d1, d-d1
+        nl[0].pr,nl[1].pr=r1,r-r1
+        nl[0].pk,nl[1].pk=k1,k-k1
+        nl[0].pg3pr,nl[1].pg3pr=g3pr1,g3pr-g3pr1
+        nl[0].ppar, nl[1].ppar = ppar,ppar
+        
+        
+        # [nl[0].ppd, nl[0].ppd_r, nl[0].ppk, 
+        # nl[0].ppk_r, nl[0].ppr, nl[0].pg3p, nl[0].pmd,  
+        # nl[0].pmr, nl[0].pmk, nl[0].pd, 
+        # nl[0].pr, nl[0].pk, nl[0].pg3pr, nl[0].ppar] = [1,0,1,0,1,10,1,1,1,1,1,1,1,1]
+        
+        # [nl[1].ppd, nl[1].ppd_r, nl[1].ppk, 
+        # nl[1].ppk_r, nl[1].ppr, nl[1].pg3p, nl[1].pmd,  
+        # nl[1].pmr, nl[1].pmk, nl[1].pd, 
+        # nl[1].pr, nl[1].pk, nl[1].pg3pr, nl[1].ppar] = [1,0,1,0,1,10,1,1,1,1,1,1,1,1]
+        
+        if params.inheritance==0:
+            # if nl[0].pr>=20:
+            #     nl[0].mu=params.gmax*(np.exp(nl[0].pr*nl[0].pr/(200+nl[0].pr*nl[0].pr)))
+            # else:
+            #     nl[0].mu=random.randrange(30,60)
+                
+            # if nl[1].pr>=20:
+            #     nl[1].mu=params.gmax*(np.exp(nl[1].pr*nl[1].pr/(200+nl[1].pr*nl[1].pr)))
+            # else:
+            #     nl[1].mu=random.randrange(30,60)
+            
+            
+            # ndiv1=np.random.choice(params.gmax)*(np.exp(0.7*nl[0].pr*nl[0].pr)/(1000+nl[0].pr*nl[0].pr))
+            # ndiv2=np.random.choice(params.gmax)*(np.exp(0.7*nl[1].pr*nl[1].pr)/(1000+nl[1].pr*nl[1].pr))
+            
+            ndiv1=nl[0].gmax*(1+1.2*nl[0].pr*nl[0].pr/(150*150+nl[0].pr*nl[0].pr))#0.7-1.0
+            ndiv2=nl[1].gmax*(1+1.2*nl[1].pr*nl[1].pr/(150*150+nl[1].pr*nl[1].pr))#0.7-1.0
+            if ndiv1<=30:
+                ndiv1=30
+            
+            if ndiv2<=30:
+                ndiv2=30
+            
+            nl[0].mu, nl[1].mu = ndiv1, ndiv2
+            nl[0].nextdiv, nl[1].nextdiv = nl[0].tnow+ndiv1, nl[1].tnow+ndiv2
+            
+            nl[0].factor=np.exp(-(nl[0].mu-30)/50)
+            nl[1].factor=np.exp(-(nl[1].mu-30)/50)
+            # if ndiv1>=40:
+            #     nl[0].factor=np.exp(-(ndiv1-30)/50)
+            # else:
+            #     nl[0].factor=1
+            
+            # if ndiv2>=40:
+            #     nl[1].factor=np.exp(-(ndiv2-30)/50)
+            # else:
+            #     nl[1].factor=1
+    
+        
+        
+       
+        
+        nl[0].ssa()
+        nl[1].ssa()
 
         return nl
         
@@ -314,29 +548,32 @@ class Cell:
         #           self.ppr, self.pg3p, self.pmd, self.pmk, self.pmr, self.pmf, self.pmt, self.pd, self.pk, 
         #           self.pr, self.pf, self.pt, 
         #           self.pgly, self.pglyk, self.pg3pr, self.pg3pd, ita)
-        model = gp.Gillespie_bistable(self.ppd, self.ppd_r, self.ppt, self.ppt_r,
-                  self.ppr, self.pg3p, self.pmd, self.pmr, self.pmt, self.pd,  
-                  self.pr, self.pt)
+       
+        # print('running ssa')
+        model = gp.Gillespie_bistable(self.ppd, self.ppd_r, self.ppk, self.ppk_r,self.ppr, self.pg3p, self.pmd, 
+                                      self.pmr, self.pmk, self.pd, self.pr, self.pk, self.pg3pr, self.ppar, self.factor, self.mu, self.influx)
         # results = model.run(TauLeapingSolver)
         results = model.run(NumPySSASolver)
         self.ppd=results['pD'][-1]
         self.ppd_r=results['pD_R'][-1] 
         # self.pfk=results['pFK'][-1]
         # self.pfk_r=results['pFK_R'][-1] 
-        self.ppt=results['pT'][-1] 
-        self.ppt_r=results['pT_R'][-1]
+        self.ppk=results['pK'][-1] 
+        self.ppk_r=results['pK_R'][-1]
         self.ppr=results['pR'][-1] 
         self.pg3p=results['G3P'][-1]
         self.pmd=results['mD'][-1] 
         # self.pmk=results['mK'][-1] 
         self.pmr=results['mR'][-1] 
         # self.pmf=results['mF'][-1] 
-        self.pmt=results['mT'][-1] 
+        self.pmk=results['mK'][-1] 
         self.pd=results['D'][-1] 
         # self.pk=results['K'][-1] 
         self.pr=results['R'][-1] 
         # self.pf=results['F'][-1] 
-        self.pt=results['T'][-1] 
+        self.pk=results['K'][-1] 
+        self.pg3pr=results['G3PR'][-1] 
+        self.ppar=results['paR'][-1] 
         # self.pgly=results['Gly'][-1] 
         # self.pglyk=results['GlyK'][-1] 
         # self.pg3pr=results['G3PR'][-1] 

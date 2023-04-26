@@ -47,7 +47,8 @@ def main_fn(core):
     np.random.seed(random.randint(1,100000))
     
 	
-    mu=params.mus[core]
+    mu=params.mus[core]#np.random.choice(params.mus)#[core]
+    myx=np.random.choice(params.myx)
     sigma=params.sigma
     method=params.method
     
@@ -58,6 +59,7 @@ def main_fn(core):
     max_cells=params.max_cells
     radius=params.radius
     lmt=np.random.choice(params.max_lim)
+    print(myx)
     # def uptake(a,b):
     
     #     for i in range(len(b)):
@@ -72,11 +74,18 @@ def main_fn(core):
     # g3p_xy=[[0,0]]
     # g3px_xy=np.array([[0,0,0,0.1,0.1]])
     
-    bb=[cell2.Cell(0, mu, lmt) for i in range(100)]
+    bb=[cell2.Cell(0, np.random.choice(params.gmax), lmt, np.random.choice(params.factors), myx) for i in range(100)]
+    
+    if params.gly_uptake==1: 
+        gly_xy=np.random.randint(box_width,size=[200000,2])
+    else:
+        gly_xy=np.random.randint(box_width,size=[5,2])
     
     
-    gly_xy=np.random.randint(box_width,size=[10,2])
-    g3p_xy=np.random.randint(box_width,size=[200000,2])
+    if params.g3p_uptake==1: 
+        g3p_xy=np.random.randint(box_width,size=[75000,2])
+    else:
+        g3p_xy=np.random.randint(box_width,size=[5,2])
     # plt.plot(gly_xy[:,0],gly_xy[:,1],'r.',markersize=1)
     # plt.savefig('gly_initial.png')
     
@@ -87,14 +96,14 @@ def main_fn(core):
         # print(len(gly_xy))
         tnow=round(tnow+dt,1)
         
+        
+        
         if round(tnow,1)%1==0:
             print([tnow,len(bb),len(g3p_xy),len(gly_xy)])
+            
         
         # tree=spatial.KDTree(gly_xy)
         # tree_g3p=spatial.KDTree(g3p_xy)
-        
-        
-        
         
         
         
@@ -136,8 +145,36 @@ def main_fn(core):
     
         counter=-1
         for i in bb:
+            if i.mu<30:
+                print(['new born mu ',i.mu])
+            
             counter+=1
-            i.volume=i.volume+dt*(np.log(2)/int(i.nextdiv-i.birthtime))*np.exp(np.log(2)*(tnow-i.birthtime-1)/int(i.nextdiv-i.birthtime))
+            i.volume=1
+            #i.volume=i.volume+dt*(np.log(2)/int(i.nextdiv-i.birthtime))*np.exp(np.log(2)*(tnow-i.birthtime-1)/int(i.nextdiv-i.birthtime))
+            
+            ################# Random walk update cells
+
+            directions = ["UP", "DOWN", "LEFT", "RIGHT"]
+            step = random.choice(directions)
+            
+            if step == "RIGHT":
+                if i.xpos<box_width:
+                    i.xpos+=2
+            elif step == "LEFT":
+                if i.xpos>0:
+                    i.xpos-=2
+            elif step == "UP":
+                if i.ypos<box_width:
+                    i.ypos+=2
+            elif step == "DOWN":
+                if i.ypos > 0:
+                    i.ypos-=2
+            
+            
+            
+            
+            
+            
             # if round(tnow,1)%1==0:
             #     print([i.volume,i.nextdiv])
             # if len(clpt_gly[counter])>0:
@@ -153,7 +190,7 @@ def main_fn(core):
             #         tree=spatial.KDTree(gly_xy)
             #         clpt_gly=tree.query_ball_point(bb_xy,5)
             
-            if round(tnow,1)%2==0:
+            if round(tnow,1)%5==0:
                 
     # ######################### osmotic uptake glycerol
     #             glyn=cell2.osmotic(i.pgly,i.volume, len(clpt_gly[counter]), radius)
@@ -208,6 +245,7 @@ def main_fn(core):
                          
     ########### uptake of g3p from nearby  // no osmotic
                 if params.g3p_uptake==1:
+                    pass
                     # length_g3p=len(clpt_g3p[counter])
                     # i.pg3p+=length_g3p
                     # g3p_xy=np.delete(g3p_xy,clpt_g3p[counter][:length_g3p],axis=0)
@@ -216,16 +254,16 @@ def main_fn(core):
                     #     neigh_g3p.fit(g3p_xy)
                     #     clpt_g3p=np.asarray(neigh_g3p.radius_neighbors(bb_xy,return_distance=True,sort_results=True)[1])
                     
-                    range_x=g3p_xy[(g3p_xy[:,0]>=i.xpos-radius) & (g3p_xy[:,0]<=i.xpos+radius)]
-                    range_y=range_x[(range_x[:,1]>=i.ypos-radius) & (range_x[:,1]<=i.ypos+radius)]
+                    # range_x=g3p_xy[(g3p_xy[:,0]>=i.xpos-radius) & (g3p_xy[:,0]<=i.xpos+radius)]
+                    # range_y=range_x[(range_x[:,1]>=i.ypos-radius) & (range_x[:,1]<=i.ypos+radius)]
                     
-                    to_add=int(0.2*len(np.unique(range_y,axis=0)))
+                    # to_add=int(np.random.uniform(0,0.3,1)*len(np.unique(range_y,axis=0))) #int((i.pt/(5+i.pt))*0.5*len(np.unique(range_y,axis=0)))
                     # print(to_add)
                     
-                    i.pg3p+=to_add
+                    # i.pg3p+=to_add
                     # t_delete=range_y[np.random.choice(range(len(np.unique(range_y,axis=0))),to_add)]
                     # print(range_y)
-                    g3p_xy=np.delete(g3p_xy,range_y[0:to_add],axis=0)
+                    # g3p_xy=np.delete(g3p_xy,range_y[0:to_add],axis=0)
                 
                     # if len(clpt_g3p[counter])>0:
                     #     if i.pk>0:
@@ -286,12 +324,17 @@ def main_fn(core):
                 #         i.pg3p=g3pn
                         
                 
-                if method=='stochastic':
-                    kk=i.ssa()
-                if method=='deterministic':
-                    kk=i.simple_ode()
-                if method=='sde':
-                    kk=i.simple_sde()
+                # if method=='stochastic':
+                #     kk=i.ssa()
+                #     # print([i.pmd,i.pmr,i.pd,i.pr,i.pg3p])
+                # if method=='deterministic':
+                #     kk=i.simple_ode()
+                # if method=='sde':
+                #     kk=i.simple_sde()
+                    
+                    
+
+                    
                 
         # if len(bb)>max_cells-500:
     
@@ -364,24 +407,7 @@ def main_fn(core):
             #   i.yvel = -i.yvel
             #   i.ypos += i.yvel*dt
               
-################# Random walk update cells
 
-        directions = ["UP", "DOWN", "LEFT", "RIGHT"]
-        step = random.choice(directions)
-        
-        if step == "RIGHT":
-            if i.xpos<box_width:
-                i.xpos+=2
-        elif step == "LEFT":
-            if i.xpos>0:
-                i.xpos-=2
-        elif step == "UP":
-            if i.ypos<box_width:
-                i.ypos+=2
-        elif step == "DOWN":
-            if i.ypos > 0:
-                i.ypos-=2
-                    
                     
 ################# Random walk update g3p
 
@@ -454,7 +480,7 @@ def main_fn(core):
     
     # Creating histogram
     
-    hist1=[[b.pd,b.pmd,b.pg3p] for b in bb]
+    hist1=[[b.pd,b.pmd,b.pg3p, b.pmr, b.pr, b.ppd, b.ppr] for b in bb]
     # hist2=[b.pmd for b in bb]
     # density = kde.gaussian_kde(hist)
     # x = np.linspace(min(hist),max(hist),100)
@@ -517,7 +543,7 @@ def main_fn(core):
 
 if __name__ == '__main__':
     with Pool(10) as p:
-        print(p.map(main_fn, range(1,31)))
+        print(p.map(main_fn, range(1,21)))
 
 
 
