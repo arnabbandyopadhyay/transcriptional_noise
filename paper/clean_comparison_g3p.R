@@ -87,15 +87,18 @@ data_process<-function(location, name){
 }
 
 
-loc1<-'/home/abp19/Projects/transcriptional_noise/good_result/Sus_model/inves/final/paper/ngr_10_sw_re_0.5_con/'
-loc2<-'/home/abp19/Projects/transcriptional_noise/good_result/Sus_model/inves/final/paper/final_sim_gr/exp0.1/10/'
-loc3<-'/home/abp19/Projects/transcriptional_noise/good_result/Sus_model/inves/final/paper/add_g3p_new/'
+# loc1<-'/home/abp19/Projects/transcriptional_noise/good_result/Sus_model/inves/final/paper/ngr_10_sw_re_0.5_con/'
+# loc2<-'/home/abp19/Projects/transcriptional_noise/good_result/Sus_model/inves/final/paper/final_sim_gr/exp0.1/10/'
+# loc3<-'/home/abp19/Projects/transcriptional_noise/good_result/Sus_model/inves/final/paper/add_g3p_new/'
 
+loc1<-'/home/arnab/BRICS/paper/ngr_10_sw_re_0.5_con/'
+loc2<-'/home/arnab/BRICS/paper/final_sim_gr/exp0.1/10/'
+loc3<-'/home/arnab/BRICS/paper/add_g3p_new/'
 
 
 
 loc<-c(loc1, loc2, loc3)
-name<-c('low','low+gr','low+gr+g3p')
+name<-c('Low inoculum','Low inoculum and growth modulation','Low inoculum and growth modulation, G3P addition')
 d1<-data_process(loc,name)
 
 nd<-d1$nd
@@ -109,13 +112,13 @@ setwd('/home/abp19/Projects/transcriptional_noise/good_result/Sus_model/inves/fi
 #basic example
 pdf('add_g3p.pdf', height=16, width = 8)
 # png('glpd_dist.png')
-ggplot(den_d, aes(x = value, y = name, fill=cond)) +
+ggplot(den_d, aes(x = value, y = name, fill=str_wrap(cond,20))) +
   geom_density_ridges(scale=3,alpha = .7,vline_color=alpha('black',0.7)) +
   theme_ridges()+#facet_wrap(~cond,scales="free_y")+
   theme_bw()+theme(strip.background=element_rect(fill='white'))+theme(
     panel.background = element_rect(fill = "white",colour = "black",linewidth = 1),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),
     axis.text.x = element_text(face="bold", size=12,angle=45, vjust = 0.5),
-    legend.position = 'top',legend.text = element_text(colour="black", size=15),legend.title=element_blank(),
+    legend.position = 'bottom',legend.text = element_text(colour="black", size=15),legend.title=element_blank(),
     plot.title = element_text(color="red", size=14, face="bold.italic"),
     axis.text.y = element_text(face="bold", size=12),
     axis.title.x = element_text(face="bold", size=16),
@@ -147,7 +150,7 @@ dev.off()
 #     strip.text.y = element_text(size = 14, color = "black", face = "bold.italic"))+xlab('Condition')+ylab('')
 # dev.off()
 
-kur<-nd %>% group_by(name, cond) %>%   summarise('Mean mD'=mean(mD), cv=sd(mD)/mean(mD), Skewness = skewness(mD), Kurtosis = kurtosis(mD) )
+kur<-nd %>% group_by(name, cond) %>%   summarise('Mean glpD'=mean(mD), CV=sd(mD)/mean(mD), Skewness = skewness(mD), Kurtosis = kurtosis(mD) )
 kur<-melt(kur, id=c('name','cond'))
 pdf('stat_g3p.pdf', height=16, width = 8)
 ggplot(kur, aes(x=cond,y=value)) + 
@@ -156,10 +159,11 @@ ggplot(kur, aes(x=cond,y=value)) +
   theme_bw()+theme(strip.background=element_rect(fill='white'))+theme(
     panel.background = element_rect(fill = "white",colour = "black",linewidth = 1),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),
     legend.position = c(0.8, 0.2),legend.key.size = unit(1, 'cm'),legend.title = element_blank(),
-    legend.text = element_text(colour="black", size=15), axis.text.x = element_text(face="bold", size=12,angle=45, vjust = 0.5),
+    legend.text = element_text(colour="black", size=15), axis.text.x = element_text(face="bold", size=12,angle=90, vjust = 0.5),
     axis.text.y = element_text(face="bold", size=12),
     axis.title.x = element_text(face="bold", size=16),
     axis.title.y = element_text(face="bold", size=16),
     strip.text.x = element_text(size = 14, color = "black", face = "bold.italic"),
-    strip.text.y = element_text(size = 14, color = "black", face = "bold.italic"))+xlab('Condition')+ylab('')
+    strip.text.y = element_text(size = 14, color = "black", face = "bold.italic"))+xlab('')+ylab('')+
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 14))
 dev.off()
