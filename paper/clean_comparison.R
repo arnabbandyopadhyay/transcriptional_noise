@@ -83,17 +83,17 @@ data_process<-function(location, name){
 }
 
 
-loc1<-'/home/abp19/Projects/transcriptional_noise/good_result/Sus_model/inves/final/ngr_10_sw_re_0.5_con/'
-loc2<-'/home/abp19/Projects/transcriptional_noise/good_result/Sus_model/inves/final/ngr_100_sw_re_0.5_con/'
+loc1<-'/home/arnab/BRICS/paper/ngr_10_sw_re_0.5_con/'
+loc2<-'/home/arnab/BRICS/paper/ngr_100_sw_re_0.5_con/'
 #loc3<-'/home/abp19/Projects/transcriptional_noise/good_result/Sus_model/inves/final/testing/10/'
 #loc4<-'/home/abp19/Projects/transcriptional_noise/good_result/Sus_model/inves/final/testing/100/'
-loc3<-'/home/abp19/Projects/transcriptional_noise/good_result/Sus_model/inves/final/final_sim_gr/exp0.1/10/'
-loc4<-'/home/abp19/Projects/transcriptional_noise/good_result/Sus_model/inves/final/final_sim_gr/exp0.1/100/'
+loc3<-'/home/arnab/BRICS/paper/final_sim_gr/exp0.1/10/'
+loc4<-'/home/arnab/BRICS/paper/final_sim_gr/exp0.1/100/'
 
 
 
 loc<-c(loc1, loc2, loc3, loc4)
-name<-c('low','high','low+gr','high+gr')
+name<-c('Low inoculum','High inoculum','Low inoculum and growth modulation','High inoculum and growth modulation')
 d1<-data_process(loc,name)
 
 nd<-d1$nd
@@ -105,9 +105,9 @@ den_d<-melt(nd[,c(1,3,10)])
 setwd('/home/abp19/Projects/transcriptional_noise/good_result/Sus_model/inves/final/')
 
 #basic example
-pdf('final_plot2.pdf', height=20, width = 16)
+pdf('final_plot2.pdf', height=20, width = 18)
 # png('glpd_dist.png')
-p1<-ggplot(den_d[den_d$cond%in%c('low','high'),], aes(x = value, y = name,group=name, fill=name)) +
+p1<-ggplot(den_d[den_d$cond%in%c('Low inoculum','High inoculum'),], aes(x = value, y = name,group=name, fill=name)) +
   geom_density_ridges(bandwidth = 0.5,quantile_lines = TRUE, quantiles = 4,scale=3,alpha = .7,vline_color=alpha('black',1)) +
   theme_ridges()+facet_wrap(~cond,scales="free_y")+
   theme_bw()+theme(strip.background=element_rect(fill='white'))+theme(
@@ -117,11 +117,11 @@ p1<-ggplot(den_d[den_d$cond%in%c('low','high'),], aes(x = value, y = name,group=
     axis.text.y = element_text(face="bold", size=16),
     axis.title.x = element_text(face="bold", size=16),
     axis.title.y = element_text(face="bold", size=16),
-    strip.text.x = element_text(size = 16, color = "black", face = "bold.italic"),
+    strip.text.x = element_text(size = 14, color = "black", face = "bold.italic"),
     strip.text.y = element_text(size = 16, color = "black", face = "bold.italic"))+xlab('GlpD')+xlim(c(-1,25))
 #  xlim(c(-1,30))+ylab('Colony')
 
-p2<-ggplot(den_d[den_d$cond%in%c('low+gr','high+gr'),], aes(x = value, y = name,group=name, fill=name)) +
+p2<-ggplot(den_d[den_d$cond%in%c('Low inoculum and growth modulation','High inoculum and growth modulation'),], aes(x = value, y = name,group=name, fill=name)) +
   geom_density_ridges(bandwidth = 0.5,quantile_lines = TRUE, quantiles = 4,scale=3,alpha = .7,vline_color=alpha('black',1)) +
   theme_ridges()+facet_wrap(~cond,scales="free_y")+
   theme_bw()+theme(strip.background=element_rect(fill='white'))+theme(
@@ -131,7 +131,7 @@ p2<-ggplot(den_d[den_d$cond%in%c('low+gr','high+gr'),], aes(x = value, y = name,
     axis.text.y = element_text(face="bold", size=16),
     axis.title.x = element_text(face="bold", size=16),
     axis.title.y = element_text(face="bold", size=16),
-    strip.text.x = element_text(size = 16, color = "black", face = "bold.italic"),
+    strip.text.x = element_text(size = 14, color = "black", face = "bold.italic"),
     strip.text.y = element_text(size = 16, color = "black", face = "bold.italic"))+xlab('GlpD')+xlim(c(-1,25))
 
 
@@ -161,7 +161,7 @@ dev.off()
 #     strip.text.y = element_text(size = 14, color = "black", face = "bold.italic"))+xlab('Condition')+ylab('')
 # dev.off()
 
-kur<-nd %>% group_by(name, cond) %>%   summarise('Mean mD'=mean(mD), cv=sd(mD)/mean(mD), Skewness = skewness(mD), Kurtosis = kurtosis(mD) )
+kur<-nd %>% group_by(name, cond) %>%   summarise('Mean glpD'=mean(mD), CV=sd(mD)/mean(mD), Skewness = skewness(mD), Kurtosis = kurtosis(mD) )
 kur<-melt(kur, id=c('name','cond'))
 pdf('stat_final.pdf')
 ggplot(kur, aes(x=cond,y=value)) + 
@@ -170,10 +170,11 @@ ggplot(kur, aes(x=cond,y=value)) +
   theme_bw()+theme(strip.background=element_rect(fill='white'))+theme(
     panel.background = element_rect(fill = "white",colour = "black",linewidth = 1),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),
     legend.position = c(0.8, 0.2),legend.key.size = unit(1, 'cm'),legend.title = element_blank(),
-    legend.text = element_text(colour="black", size=15), axis.text.x = element_text(face="bold", size=12,angle=45, vjust = 0.5),
+    legend.text = element_text(colour="black", size=15), axis.text.x = element_text(face="bold", size=10,angle=90, vjust = 0.5),
     axis.text.y = element_text(face="bold", size=12),
     axis.title.x = element_text(face="bold", size=16),
     axis.title.y = element_text(face="bold", size=16),
     strip.text.x = element_text(size = 14, color = "black", face = "bold.italic"),
-    strip.text.y = element_text(size = 14, color = "black", face = "bold.italic"))+xlab('Condition')+ylab('')
+    strip.text.y = element_text(size = 14, color = "black", face = "bold.italic"))+xlab('')+ylab('')+
+  scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = 14))
 dev.off()
