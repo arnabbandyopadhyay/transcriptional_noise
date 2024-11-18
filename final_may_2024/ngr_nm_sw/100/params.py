@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Feb 22 09:03:46 2022
+Created on Tue Feb 22, 2022
 
-@author: abp19
+@author: Arnab Bandyopadhyay
 """
 
 import random
@@ -23,12 +23,10 @@ reten_prob=[random.uniform(0, 0.5) for i in range(100)]
 switching_prob=[random.uniform(0, 0.5) for i in range(100)]
 switching_back=[random.uniform(0, 0) for i in range(100)]
 radius=3
-gly_uptake=0 #from environment=1, 0 otherwise
-g3p_uptake=0 #from environment=1, 0 otherwise
 max_lim=[5,50]
 method='stochastic'
-# ran=np.random.normal(3,3,1000)
 ran=np.random.uniform(0,3,1000)
 factors=[1,1]#[ff for ff in ran if ff>0]
+km=100
 
 

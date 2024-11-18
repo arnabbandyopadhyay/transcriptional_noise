@@ -1,18 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Nov 21 20:24:59 2021
+Created on Sun Nov 21, 2021
 
-@author: Arnab
+@author: Arnab Bandyopadhyay
 """
 
-# Numpy is used to set the timespan of the Model.
 import numpy as np
 import matplotlib.pyplot as plt
 import random
 
-
-
-# Import the types that'll be needed to define your Model.
 from gillespy2.core import (
     Model,
     Species,

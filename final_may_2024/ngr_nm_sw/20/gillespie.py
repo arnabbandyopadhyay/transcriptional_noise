@@ -1,18 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Nov 21 20:24:59 2021
+Created on Sun Nov 21, 2021
 
-@author: Arnab
+@author: Arnab Bandyopadhyay
 """
-
-# Numpy is used to set the timespan of the Model.
 import numpy as np
 import matplotlib.pyplot as plt
 import random
 
-
-
-# Import the types that'll be needed to define your Model.
 from gillespy2.core import (
     Model,
     Species,
@@ -56,11 +51,11 @@ class Gillespie(Model):
             
         
             # ######## param for higher variability in D but lower in R (cell div 30)
-            rate1 = Parameter(name="kbpd", expression=0.1)#2165.44314226246/scaling)
-            rate2 = Parameter(name="kupd", expression=0.5)#10014.7094615103/scaling)
-            rate3 = Parameter(name="kbpk", expression=0.1)#1588.06318455853/scaling)
-            rate4 = Parameter(name="kupk", expression=0.5)#10477.3841801672/scaling)
-            rate5 = Parameter(name="kbpr", expression=0)# 0.05 also gives interesting
+            rate1 = Parameter(name="kbpd", expression=0.1)
+            rate2 = Parameter(name="kupd", expression=0.5)
+            rate3 = Parameter(name="kbpk", expression=0.1)
+            rate4 = Parameter(name="kupk", expression=0.5)
+            rate5 = Parameter(name="kbpr", expression=0)
             rate6 = Parameter(name="kupr", expression=0)
         
             rate7 = Parameter(name="ktrd", expression=1*influx*sc_tr*met_sca)
