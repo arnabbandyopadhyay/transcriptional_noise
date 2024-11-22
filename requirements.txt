@@ -1,0 +1,4 @@
+numpy==1.19.5
+gillespy2==1.8.2
+scipy==1.5.4
+matplotlib==3.3.4
