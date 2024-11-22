@@ -119,7 +119,7 @@ den_d<-melt(nd[,c(1,3,10)])
 
 
 #basic example
-pdf('final_plot.pdf', height=10, width = 18)
+pdf('sample_plot.pdf', height=10, width = 18)
 # png('glpd_dist.png')
 p1<-ggplot(den_d[den_d$cond%in%c('Low(M+NS) inoculum','High(M+NS) inoculum'),], aes(x = value, y = name,group=name, fill=name)) +
   geom_density_ridges(bandwidth = 0.5,quantile_lines = TRUE, quantiles = 4,scale=3,alpha = .7,vline_color=alpha('black',1)) +
@@ -190,7 +190,7 @@ dev.off()
 
 kur<-nd %>% group_by(name, cond) %>%   summarise('Mean glpD'=mean(mD), CV=sd(mD)/mean(mD), Skewness = skewness(mD), Kurtosis = kurtosis(mD) )
 kur<-melt(kur, id=c('name','cond'))
-pdf('stat_final.pdf', height = 7)
+pdf('stat_sample.pdf', height = 7)
 ggplot(kur, aes(x=cond,y=value)) + 
   geom_boxplot()+#coord_trans(y="log10")+
   geom_jitter(shape=16,col='red',position=position_jitter(0.1))+

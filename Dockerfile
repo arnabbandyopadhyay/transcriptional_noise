@@ -1,7 +1,5 @@
-# Use Ubuntu 20.04 base image
 FROM ubuntu:20.04
 
-# Set environment variable to avoid interactive prompts during installation
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install Python 3.9, R version 4, and necessary dependencies
@@ -11,14 +9,18 @@ RUN apt-get update && \
     wget \
     dirmngr \
     gnupg \
+    make \
+    cmake \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    libxml2-dev \
+    liblapack-dev \
+    libblas-dev \
+    gfortran \
+    build-essential \
     ca-certificates && \
     \
-    # Add CRAN GPG key and repository for R version 4
-    # wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee /usr/share/keyrings/cran-archive-keyring.gpg > /dev/null && \
-    # echo "deb [signed-by=/usr/share/keyrings/cran-archive-keyring.gpg] https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/" | tee /etc/apt/sources.list.d/cran.list && \
-    # apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9 && \
-    # gpg --keyserver pgp.mit.edu --recv-key 381BA480 && \
-    # gpg -a --export 381BA480 | apt-key add - && \
+    # Add key and repository for R version
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 && \
     add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' && \
     apt-get update && \
@@ -38,16 +40,32 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* 
 
-    
-# Install R packages
-RUN Rscript -e "install.packages(c('ggridges', 'ggplot2', 'dplyr', 'reshape2', 'moments'), repos='https://cloud.r-project.org')"
+# install necessary libraries in python
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# Install remotes package for version management
+RUN Rscript -e "install.packages('remotes', repos='https://cloud.r-project.org')"
+
+# Install specific versions of R packages
+RUN Rscript -e "remotes::install_version('ggridges', version = '0.5.6', repos = 'https://cloud.r-project.org')" \
+    && Rscript -e "remotes::install_version('dplyr', version = '1.1.4', repos = 'https://cloud.r-project.org')" \
+    && Rscript -e "remotes::install_version('ggplot2', version = '3.5.1', repos = 'https://cloud.r-project.org')" \
+    && Rscript -e "remotes::install_version('reshape2', version = '1.4.4', repos = 'https://cloud.r-project.org')" \
+    && Rscript -e "remotes::install_version('moments', version = '0.14.1', repos = 'https://cloud.r-project.org')" \
+    && Rscript -e "remotes::install_version('ggpubr', version = '0.6.0', repos = 'https://cloud.r-project.org')" 
+
+# To install current version of R packages
+# RUN Rscript -e "install.packages(c('ggridges', 'ggplot2', 'dplyr', 'reshape2', 'moments','ggpubr'), repos='https://cloud.r-project.org')"
 
 
 # Verify installations
  RUN python3 --version && R --version
 
-# Set working directory
-WORKDIR /app
+# Set the working directory to the user's home directory
+WORKDIR /home
+RUN mkdir transcriptional_noise
+COPY . /home/transcriptional_noise/
 
 # Default command to keep the container running
 CMD ["bash"]
