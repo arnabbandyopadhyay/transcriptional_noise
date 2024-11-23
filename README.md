@@ -28,7 +28,7 @@ To pull the image from docker hub, run
 
     docker pull arnabrkmv/transcriptional_noise:latest
 
-**3) Run the container
+**3) Run the container**
 
 To start the container interactively:
 
