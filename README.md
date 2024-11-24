@@ -36,7 +36,7 @@ To start the container interactively:
 
 For persistent data storage, mount a local directory:
 
-    docker run -it -v /path/to/local/dir:/home/ transcriptional_noise
+    docker run -it -v /path/to/local/dir:/mnt/ transcriptional_noise
 
 
 
