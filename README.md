@@ -32,11 +32,11 @@ To pull the image from docker hub, run
 
 To start the container interactively:
 
-    docker run -it -p 8787:8787 my-r-python-rstudio-image
+    docker run -it transcriptional_noise
 
 For persistent data storage, mount a local directory:
 
-    docker run -it -p 8787:8787 -v /path/to/local/dir:/home/rstudio my-r-python-rstudio-image
+    docker run -it -v /path/to/local/dir:/home/ transcriptional_noise
 
 
 
