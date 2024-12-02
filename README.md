@@ -54,6 +54,11 @@ Finally, to launch a simulation, navigate to a desired folder and run:
 
     nohup python main.py &
 
+## Computing statistics
+
+Rplot.R provides a template for generating population distributions and for comparing statistics. It generates two plots: sample_plot.pdf is for plotting the distributions and stat_sample.pdf is for computing statistics.  
+
+    Rscript Rplot.R
 
 
 
