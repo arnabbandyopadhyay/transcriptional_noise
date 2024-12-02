@@ -50,13 +50,13 @@ Four folders with all the necessary codes are already copied within the containe
 
 Before launching simulation, it is recommended to set the max_cells value in params.py file to a desired value. Further the code uses multiprocessing library and multiple simulations can be launched in parallel. To set this to a desired value, modify the last couple of lines in main.py file. Generally, a container has no resource constraints and can use as much of a given resource as the host's kernel scheduler allows. For restricted resource allocation, check the guidelines at: https://docs.docker.com/engine/containers/resource_constraints/
 
-Finally, to launch a simulation, navigate to a desired folder and run:
+Finally, to launch a simulation, navigate to a desired folder and from terminal run:
 
     nohup python main.py &
 
 ## Computing statistics
 
-Rplot.R provides a template for generating population distributions and for comparing statistics. It generates two plots: sample_plot.pdf is for plotting the distributions and stat_sample.pdf is for computing statistics.  
+Rplot.R provides a template for generating population distributions and for comparing statistics. Edit the locations of the directory in the script as necessary, modify my_comparisons list accordingly. It generates two plots: sample_plot.pdf that plots the distributions and stat_sample.pdf that plots computed statistics.  
 
     Rscript Rplot.R
 
