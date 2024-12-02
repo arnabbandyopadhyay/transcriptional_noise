@@ -7,7 +7,7 @@ Created on Thu Nov 25, 2021
 
 import numpy as np
 import random
-import cell2 
+import cell
 import csv
 from multiprocessing import Pool, Process, freeze_support
 import params
@@ -33,7 +33,7 @@ def main_fn(core):
     nd=[]
     gly_n=[]
   
-    bb=[cell2.Cell(0, np.random.choice(params.gmax), lmt, np.random.choice(params.factors), np.random.choice(params.myx)) for i in range(20)]
+    bb=[cell.Cell(0, np.random.choice(params.gmax), lmt, np.random.choice(params.factors), np.random.choice(params.myx)) for i in range(20)]
     
     gly_xy=np.random.randint(box_width,size=[5,2])
     g3p_xy=np.random.randint(box_width,size=[5,2])
@@ -47,7 +47,7 @@ def main_fn(core):
         if round(tnow,1)%1==0:
             print([tnow,len(bb),len(g3p_xy),len(gly_xy)])
               
-        cell2.Cell.tnow=tnow
+        cell.Cell.tnow=tnow
         
         if ((to_switch==1) and (len(bb)<max_cells)):
             switch='yes'
