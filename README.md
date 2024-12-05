@@ -1,4 +1,6 @@
-This repository contains all the codes necessary to reproduce the modeling result contained in the article entitles '...'. Docker file contains a minimal script necessary to create an isolated environment for testing the scripts.
+# Epigenetic cellular memory in Pseudomonas aeruginosa generates phenotypic variation in response to host environments
+
+This repository contains all the codes necessary to reproduce the modeling result contained in the article entitles 'Epigenetic cellular memory in Pseudomonas aeruginosa generates phenotypic variation in response to host environments'. Docker file contains a minimal script necessary to create an isolated environment for testing the scripts.
 
 **Docker Image for R, Python**
 
