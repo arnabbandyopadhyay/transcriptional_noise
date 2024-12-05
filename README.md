@@ -27,6 +27,10 @@ Elisabeth Vatareck 1,2⁕, Tim Rick 3⁕, Nicolas Oswaldo Gomez 1⁕, Arnab Band
 
 ---
 
+**Cite the code** [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14280669.svg)](https://doi.org/10.5281/zenodo.14280669)
+
+
+
 This repository contains all the codes necessary to reproduce the modeling result contained in the article entitles 'Epigenetic cellular memory in Pseudomonas aeruginosa generates phenotypic variation in response to host environments'. Docker file contains a minimal script necessary to create an isolated environment for testing the scripts.
 
 **Docker Image for R, Python**
