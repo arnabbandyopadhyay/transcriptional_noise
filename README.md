@@ -4,14 +4,21 @@
 Elisabeth Vatareck 1,2⁕, Tim Rick 3⁕, Nicolas Oswaldo Gomez1⁕, Arnab Bandyopadhyay 4*, Janina Kramer 1 , Dmytro Strunin 3 , Jelena Erdmann 1,2 , Oliver Hartmann 1,2 , Kathrin Alpers 1 , Christian Boedeker 5 , Christian Sieben 6,7 , Gang Zhao 4,8 , Jürgen Tomasch 1 , and Susanne Häussler 1,2,3,9¶
 
 1 Department of Molecular Bacteriology, Helmholtz Centre for Infection Research (HZI), Braunschweig, Germany 
+
 2 Institute of Molecular Bacteriology, TWINCORE Centre for Experimental and Clinical Infection Research, a joint venture of the Hannover Medical School (MHH) and the HZI, Hannover, Germany 
+
 3 Department of Clinical Microbiology, Copenhagen University Hospital – Rigshospitalet 2100 Copenhagen, Denmark
+
 4 Department of Systems Immunology, Helmholtz Centre for Infection Research (HZI), Braunschweig, Germany 
+
 5 Leibniz Institute DSMZ - Deutsche Sammlung von Mikroorganismen und Zellkulturen, Braunschweig, Germany 
+
 6 Nanoscale infection Biology, Helmholtz Centre for Infection Research (HZI), Braunschweig, Germany 
+
 7 Institute of Genetics, Technische Universität Braunschweig, Braunschweig, Germany 
-8 Current address: Clinical Pharmacology and Quantitative Pharmacology, Clinical
-Pharmacology & Safety Sciences, R&D, Astrazeneca, Cambridge, UK 
+
+8 Current address: Clinical Pharmacology and Quantitative Pharmacology, Clinical Pharmacology & Safety Sciences, R&D, Astrazeneca, Cambridge, UK 
+
 9 Cluster of Excellence RESIST (EXC 2155), Hannover Medical School, Hannover, 30625, Germany
 
 ⁕ contributed equally
