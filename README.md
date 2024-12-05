@@ -50,7 +50,7 @@ d) Essential system dependencies for compiling R and Python packages
 Instructions to install Docker is available here: https://docs.docker.com/get-started/
 
 **2) Build locally or pull the image**
- Like
+ 
 To build it locally, download this repository and navigate to this folder and run 
 
     docker build -t <image_name> .
