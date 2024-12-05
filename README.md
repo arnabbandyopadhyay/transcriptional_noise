@@ -55,7 +55,7 @@ To build it locally, download this repository and navigate to this folder and ru
 
     docker build -t <image_name> .
 
-Building a container will take ~30-60 min depending on the machine configuration and connection speed. Alternatively, the image can be pulled from docker hub. To pull the image from docker hub, run
+Building a container image will take ~30-60 min depending on the machine configuration and connection speed. Alternatively, the image can be pulled from docker hub. To pull the image from docker hub, run
 
     docker pull arnabrkmv/transcriptional_noise:latest
 
