@@ -3,7 +3,7 @@
 
 https://www.pnas.org/doi/10.1073/pnas.2415345122
 
-Elisabeth Vatareck 1,2⁕, Tim Rick 3⁕, Nicolas Oswaldo Gomez 1⁕, Arnab Bandyopadhyay 4*, Janina Kramer 1 , Dmytro Strunin 3 , Jelena Erdmann 1,2 , Oliver Hartmann 1,2 , Kathrin Alpers 1 , Christian Boedeker 5 , Christian Sieben 6,7 , Gang Zhao 4,8 , Jürgen Tomasch 1 , and Susanne Häussler 1,2,3,9¶
+Elisabeth Vatareck 1,2⁕, Tim Rick 3⁕, Nicolas Oswaldo Gomez 1⁕, Arnab Bandyopadhyay 4⁕, Janina Kramer 1 , Dmytro Strunin 3 , Jelena Erdmann 1,2 , Oliver Hartmann 1,2 , Kathrin Alpers 1 , Christian Boedeker 5 , Christian Sieben 6,7 , Gang Zhao 4,8 , Jürgen Tomasch 1 , and Susanne Häussler 1,2,3,9¶
 
 1 Department of Molecular Bacteriology, Helmholtz Centre for Infection Research (HZI), Braunschweig, Germany 
 
